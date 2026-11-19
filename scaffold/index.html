@@ -64,10 +64,17 @@
       id="root"
       data-composition-id="main"
       data-start="0"
-      data-duration="10.5"
+      data-duration="9.6"
       data-width="1080"
       data-height="1920"
     >
+      <!--
+        data-duration = last beat end (7.0 + 2.6), never the orientation cap and
+        never plus a tail that no clip fills. Measured: a root of 10.5 s against
+        a last beat ending at 9.6 s left 0.9 s of empty frame, and the contact
+        sheet came back with two blank thumbnails.
+      -->
+
       <!-- Lead-in: the title card, while nothing is narrated. -->
       <div id="title" class="clip title" data-start="0" data-duration="1.7" data-track-index="0">
         Kenapa kopi<br />bikin ngantuk?

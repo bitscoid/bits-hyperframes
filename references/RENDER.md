@@ -287,10 +287,20 @@ What still has to be enforced:
 - **The film's length is the root's `data-duration`.** An overrun is cut; an early end holds
   the last frame. Derive it from the last beat, never from the orientation cap.
 
-**Measured failure of getting that last point wrong:** the scaffold shipped
-`data-duration="9"` against a CUE ending at 7 s, so the closing beat held for 2 s of nothing.
-Worse: an earlier version used 60 s for a 9 s script and the contact sheet came back with
-nine near-identical thumbnails — 87% of the video was one still frame.
+**Measured failures of getting that last point wrong**, all from this scaffold:
+
+- `data-duration="60"` against a 9 s script: 87% of the video was one still frame, and the
+  contact sheet came back with nine near-identical thumbnails.
+- `data-duration="10.5"` against a last beat ending at 9.6 s: **0.9 s of empty frame**, which
+  the contact sheet showed as two blank thumbnails at the end.
+- The rule that follows: **the root's duration is the last clip's end**, not the cap and not
+  the last clip plus a tail that no clip fills. A tail only exists if something occupies it.
+
+```bash
+# last beat end, from the composition itself
+grep -oE 'data-start="[0-9.]+" data-duration="[0-9.]+"' index.html \
+  | awk -F'"' '{e=$2+$4; if (e>m) m=e} END {print "root data-duration should be", m}'
+```
 
 **Drift must last the whole beat.** A drift that stops after one second leaves identical
 frames, and the encoder reports a freeze. Animate `x`/`y` over the full `data-duration`.
