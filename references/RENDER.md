@@ -332,6 +332,12 @@ grep -oE 'data-start="[0-9.]+" data-duration="[0-9.]+"' index.html \
 **Drift must last the whole beat.** A drift that stops after one second leaves identical
 frames, and the encoder reports a freeze. Animate `x`/`y` over the full `data-duration`.
 
+**Move vocabulary and curves.** `CRAFT.md` §1 gives the exact GSAP parameters for slam, slide
+stack, stretch, letter cascade, flip swap, split and exit — the moves that make type read as
+design instead of as captions. §2 is the curve per role, §3 the style rules that keep a frame
+from looking like a slideshow, §4 why a spliced curve reads as choppy at 30 fps, and §5 how to
+animate text without reflowing or blurring it.
+
 **A reveal scheduled at the word leaves a hole at the cut.** The card appears only at
 `wordAt`, so the ~0.4 s between the cut and the word showed one small label and nothing else —
 the contact sheet caught it as a near-empty thumbnail. Keep one shape moving for the whole film:
@@ -455,7 +461,9 @@ Each finding carries what a sync gate needs:
 - **`runtime`** — JS errors, missing assets, media fit.
 
 `check` passing is necessary, not sufficient — it does not judge whether the composition is
-good. Read the contact sheet too.
+good. Read the contact sheet too, against the review flags in `CRAFT.md` §7: STUTTER, HITCH,
+GHOST, HANDOFF-JUMP, MUDDY and the rest. `check` catches `dead_stretch`; it does not catch a
+choppy handoff.
 
 **Report only problems.** A clean composition returns **zero findings**, so `firstSeen` is not
 available for text that behaves correctly. Do not build a gate that reads only `findings`; it

@@ -414,6 +414,7 @@ Vary the rhythm: an opening that grabs, a dynamic middle, a closing that satisfi
 Read both reference documents before building anything:
 - `references/GUIDE.md` — creative direction, typography, asset animation, transitions, **translating ideas into visuals (§5), cross-scene variation (§6)**, audio mixing.
 - `references/RENDER.md` — environment check, fonts, the render contract (HTML + GSAP seek), ffmpeg commands, verification.
+- `references/CRAFT.md` — the GSAP move vocabulary, curves per role, and the review flags.
 
 **The gate is built in.** `hyperframes check` runs lint, runtime, layout, motion, contrast, craft and audio in one pass and returns machine-readable geometry per finding. Run it before every render — it is the only check that catches a word outside the platform band.
 
