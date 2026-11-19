@@ -91,7 +91,7 @@ Word-count estimation is the documented fallback, clearly labelled as approximat
 <details open>
 <summary><b>📐 Typography geometry</b></summary>
 
-- Safe area: **4%** from every edge — and for portrait short-form, **10% from the bottom / 12% from the right** as the floor, with anything that must be read kept at **15% from the bottom** because the platform UI sits over that band
+- Safe area: the **platform band enforced by `check`**, not 4% of the edge. On 1080×1920 that is **x 120–780, y 240–1260** (TikTok, the strictest of the three); Reels and Shorts are looser and fit inside it. Measured: left 110 flagged, left 130 clean; top 240 flagged, top 300 clean; bottom 1240 flagged, bottom 1200 clean
 - **Cap height**, not font size: **4%** of the short side for primary text, **2.5%** for supporting text (1080p landscape → 43 px / 27 px). Measured once per face, never from a string's box
 - Centring is measured from the rendered box, never left to `text-align` alone
 - Text collision checked by **coverage of the smaller box (< 0.02)**, not IoU — IoU 0.16 lets a 20% line overlap pass
@@ -113,8 +113,8 @@ Measured with the WCAG formula: a light salmon `(238,150,130)` on cream `(245,24
 <details open>
 <summary><b>🔊 Audio</b></summary>
 
-- Voiceover normalised to −16 LUFS, true peak −1.5 dB, in its own file
-- Music **ducked under speech** with a fading `volume` curve, faded to a floor — never to absolute zero
+- Voiceover and music mixed in the composition, then **one** `loudnorm` pass on the export
+- Music **ducked under speech** with a fading `volume` curve that returns to its bed level, then faded to a floor at the end
 - Audio gate is **windowed**: no dead air inside the speech region, and with music the tail must still carry sound
 - Finished mix measured: **I ∈ [−17, −14] LUFS**, true peak ≤ −1 dBTP
 

@@ -362,9 +362,8 @@ Probed on this machine with single text nodes:
 | bottom 1200 | clean |
 | right 780 | flagged |
 
-This is far stricter than the 4%-of-edge rule the drawing-based skill uses. Design to this
-box, and treat it as the floor rather than a target: anything that must be read stays well
-inside it.
+Design to this box, and treat it as the floor rather than a target: anything that must be
+read stays well inside it. A 4%-of-edge margin is nowhere near enough on a phone.
 
 `npx hyperframes check` reports the exact box and platform per finding.
 
@@ -428,8 +427,8 @@ Target: `FRAMES = DUR × 30`, 30 fps, H.264 + AAC, resolution as planned.
 
 ### `hyperframes check` is the gate
 
-This is the single biggest advantage over a drawing pipeline: the gate is built in and returns
-machine-readable geometry.
+The gate is built in and returns machine-readable geometry, which is the main reason this
+engine is worth its heavier setup.
 
 ```bash
 npx hyperframes check --json
@@ -589,8 +588,8 @@ require scenes to start on beats.
   contact sheet shows duplicates. Animate over the full duration.
 - **`data-duration` copied from the orientation cap** instead of the script. A 9 s script in
   a 60 s composition is 87% dead. Derive the number from the last beat.
-- **Text outside the platform band.** TikTok needs x 120..780, y 240..1260 on 1080×1920 —
-  far stricter than 4% of the edge. Check reports the exact box.
+- **Text outside the platform band.** TikTok needs x 120..780, y 240..1260 on 1080×1920.
+  Check reports the exact box per finding.
 - **Font not declared.** Lint fails `font_family_without_font_face`; a `local()`-only face
   works here and fails in the cloud (`font_face_local_only`).
 - **`timeline_track_too_dense`** is advice, not a defect: past ~10 timed elements, split into
