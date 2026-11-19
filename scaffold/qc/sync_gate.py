@@ -25,6 +25,17 @@ if not PROBE.exists():
     sys.exit("missing work/sync-probe.json — run: python3 qc/make_sync_probe.py")
 
 probe = json.loads(PROBE.read_text())
+
+# An empty probe means the composition drew nothing the gate could check -- in
+# practice an empty (or never-edited) qc/sync-cases.json, which is this engine's
+# only case source. Reporting OK here would be a gate that checks nothing.
+if not probe:
+    sys.exit(
+        "sync gate checked nothing: qc/sync-cases.json is empty or the probe found no"
+        "\n    texts. Every keyword the film draws needs one entry there:"
+        '\n    [{"text": "<on-screen text>", "t_vo": <seconds into the voiceover>}]'
+    )
+
 findings = []
 
 for case in probe:

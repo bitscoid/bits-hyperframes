@@ -109,7 +109,7 @@ tiga-mitos-otak/
 │   ├── make_sync_probe.py  samples the composition
 │   ├── sync_gate.py        compares against the word times
 │   ├── type_gate.py        fails until a register is chosen and resolvable
-│   └── sync-cases.json     the texts the gate proves
+│   └── sync-cases.json     the texts the gate proves; ships empty, fill per film
 ├── audio/
 │   └── words.json          word-level timing; DURABLE, never deleted
 ├── assets/
@@ -433,10 +433,14 @@ cp -r <skill>/scaffold/. ./<slug>/
 cd <slug>
 mkdir -p assets audio renders work
 python3 qc/type_gate.py                    # fails until a preset is set
+# fill qc/sync-cases.json: one {text, t_vo} entry per keyword the film draws.
+# It ships empty and the sync gate REFUSES an empty probe — a gate that checks
+# nothing is not a gate.
 npx hyperframes check                      # must pass before the render
 npx hyperframes render --output work/render-raw.mp4 --workers=4
 ffmpeg -y -i work/render-raw.mp4 -af "loudnorm=I=-16:TP=-1.5:LRA=11" \
   -c:v copy -c:a aac -b:a 192k -ar 48000 renders/<slug>.mp4
+python3 qc/make_sync_probe.py && python3 qc/sync_gate.py
 ```
 
 The raw render goes to `work/` and only the normalised file carries the deliverable name.

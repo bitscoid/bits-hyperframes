@@ -23,11 +23,12 @@ What each file is:
 | `qc/make_sync_probe.py` | samples the composition, writes `work/sync-probe.json` |
 | `qc/sync_gate.py` | compares the probe against the word times, exits 1 on a finding |
 | `qc/type_gate.py` | fails until a register is chosen, resolvable, and consistent |
-| `qc/sync-cases.json` | `{text, t_vo}` pairs the gate checks, in voiceover seconds |
+| `qc/sync-cases.json` | `{text, t_vo}` pairs the gate checks; ships empty, must be filled per film |
 
 `qc/sync-cases.json` is the **only** source of sync cases here — this engine has no
-`cue.ts`, so the gate cannot derive them. Every keyword the film shows needs an entry, or
-nothing proves it lands after its word.
+`cue.ts`, so the gate cannot derive them. It ships empty on purpose: every keyword the film
+shows needs an entry, and `qc/sync_gate.py` **refuses an empty probe** rather than report a
+green run that checked nothing.
 
 ```json
 [{"text": "ngantuk", "t_vo": 0.55}, {"text": "6 jam", "t_vo": 6.46}]
