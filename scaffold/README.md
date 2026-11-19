@@ -5,7 +5,7 @@ Copied into a new project folder, then edited in place.
 ```bash
 cp -r <skill>/scaffold/. ./tiga-mitos-otak/
 cd tiga-mitos-otak
-mkdir -p assets audio renders work
+mkdir -p assets audio renders work   # only what you will fill
 npx hyperframes browser ensure   # once per machine, 685 MB
 npx hyperframes check            # must pass before any render
 npx hyperframes render --output work/render-raw.mp4 --workers=4
@@ -17,7 +17,9 @@ What each file is:
 |---|---|
 | `index.html` | the composition: markup, CSS custom properties, the GSAP timeline |
 | `compositions/` | optional sub-compositions, one scene each |
-| `qc/sync-cases.json` | `{text, t_vo}` pairs the sync gate checks |
+| `qc/make_sync_probe.py` | samples the composition, writes `work/sync-probe.json` |
+| `qc/sync_gate.py` | compares the probe against the word times, exits 1 on a finding |
+| `qc/sync-cases.json` | `{text, t_vo}` pairs the gate checks, in voiceover seconds |
 
 ## The three rules this scaffold follows
 
@@ -51,5 +53,23 @@ Replace, in this order:
 4. The card text and the meta labels.
 5. `<audio src="assets/voiceover.wav">` — the narration you actually have.
 
-Then `npx hyperframes check`. It reports every out-of-band text with its exact bbox and the
-platform that flagged it.
+Then:
+
+```bash
+npx hyperframes check                  # lint, runtime, layout, motion, contrast, craft, audio
+python3 qc/make_sync_probe.py          # needs audio/words.json
+python3 qc/sync_gate.py
+```
+
+`check` reports every out-of-band text with its exact bbox and the platform that flagged it.
+The sync gate proves each keyword appears at its spoken word and not before.
+
+## Files the scaffold does not create
+
+`assets/`, `audio/`, `renders/`, `work/` are created when there is something to put in them.
+An empty `assets/` is a lie about the project's contents.
+
+The narration and the ASR output are yours to supply:
+
+- `assets/voiceover.wav` — the recording, or the TTS output
+- `audio/words.json` — `{vo_delay, segments}`; the sync gate needs it

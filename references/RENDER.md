@@ -42,17 +42,12 @@ because the router stripped the image. Probe with one real image before relying 
 
 ```bash
 mkdir -p work
-python3 - <<'PY'
-from PIL import Image, ImageDraw
-im = Image.new("RGB", (400, 200), "white"); d = ImageDraw.Draw(im)
-d.rectangle([20, 20, 120, 120], fill=(0, 0, 255))
-d.ellipse([140, 20, 240, 120], fill=(255, 0, 0))
-d.text((30, 150), "X7-KILO", fill="black")
-im.resize((800, 400), Image.LANCZOS).save("work/vision-probe.png")
-PY
+ffmpeg -y -v error -f lavfi -i "color=c=white:s=800x400:d=1" \
+  -vf "drawbox=x=40:y=40:w=200:h=200:color=blue:t=fill,drawbox=x=280:y=40:w=200:h=200:color=red:t=80,drawtext=text=X7-KILO:x=60:y=300:fontsize=48:fontcolor=black" \
+  -frames:v 1 work/vision-probe.png
 ```
 
-Pass = the model names `X7-KILO`, a blue square and a red circle. Fail = empty reply, a
+Pass = the model names `X7-KILO`, a blue square and a red ring. Fail = empty reply, a
 refusal, or `[image omitted: ...]`.
 
 - **Pass** → keep every image call in the main session.
@@ -107,7 +102,7 @@ npx hyperframes render --output renders/<slug>.mp4 --workers=4
 | Duration | Frames | Workers | Wall |
 |---|---|---|---|
 | 3 s minimal | 90 | 3 | 8 s |
-| 10.5 s scaffold | 315 | 4 | **13 s** |
+| 9.6 s scaffold | 288 | 4 | **8 s** |
 | 60 s | 1800 | 1 | 25 s |
 | 60 s | 1800 | 6 | **19 s** |
 | 300 s landscape | 9000 | 6 | **69 s** |
