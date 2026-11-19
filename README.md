@@ -118,6 +118,7 @@ npx hyperframes check                              # must pass
 npx hyperframes render --output work/render-raw.mp4 --workers=4
 ffmpeg -y -i work/render-raw.mp4 -af "loudnorm=I=-16:TP=-1.5:LRA=11" \
   -c:v copy -c:a aac -b:a 192k -ar 48000 renders/kenapa-kopi-bikin-ngantuk.mp4
+python3 qc/safe_band.py                            # box constants match the sources
 python3 qc/make_sync_probe.py && python3 qc/sync_gate.py
 ```
 
@@ -166,7 +167,7 @@ Word-count estimation is the documented fallback, clearly labelled as approximat
 <details open>
 <summary><b>📐 Typography geometry</b></summary>
 
-- Safe area: the **platform band enforced by `check`**, not 4% of the edge. On 1080×1920 that is **x 120–780, y 240–1260** (TikTok, the strictest of the three); Reels and Shorts are looser and fit inside it. Measured: left 110 flagged, left 130 clean; top 240 flagged, top 300 clean; bottom 1240 flagged, bottom 1200 clean
+- Safe area: **4%** from every edge for anything that carries meaning. Portrait adds one content box: **13% top / 20% bottom / 5% on both sides** — `x 54..1026, y 250..1536` on 1080×1920, 972×1286, **60% of the frame**, horizontally centred. Below **55% of the height** the action rail (like/comment/share) pulls the right edge to **88%** (`x ≤ 950`). Text that must be read stays above **28% from the bottom** (y ≤ 1382). Landscape keeps 4%, with **10%** title-safe for readable text
 - **Cap height**, not font size: **4%** of the short side for primary text, **2.5%** for supporting text (1080p landscape → 43 px / 27 px). Measured once per face, never from a string's box
 - Centring is measured from the rendered box, never left to `text-align` alone
 - Text collision checked by **coverage of the smaller box (< 0.02)**, not IoU — IoU 0.16 lets a 20% line overlap pass
@@ -231,6 +232,7 @@ tiga-mitos-otak/
 ├── qc/
 │   ├── make_sync_probe.py  samples the composition
 │   ├── sync_gate.py        compares against the word times
+│   ├── safe_band.py        asserts the portrait box and action rail
 │   └── sync-cases.json     texts the gate proves
 ├── audio/
 │   └── words.json          word-level timing; DURABLE, never deleted
@@ -309,7 +311,7 @@ Then verifies it before use — under 10 KB means an HTML error page, not a font
 
 ## ⚠️ Honest limits
 
-- Music is **synthesised** unless you supply your own — simple chords, not a composition
+- Music is **synthesised** unless you supply your own — a generated chord progression (pad, bass, arpeggio), not a composition
 - Word timing is **approximate** when ASR is unavailable, and the delivery message says so
 - The agent cannot watch the video; visual QC relies on extracted frames, contact sheets, and measured numbers
 - Capped at **60 s portrait / 300 s landscape** — a five-minute explainer, not a documentary tool

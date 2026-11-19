@@ -14,7 +14,13 @@
          defaults. This block MUST stay above the script below: loaded first, it
          read an undefined key and every film shipped the same pairing. -->
     <script>
-      window.BITS_TYPE_PRESET = 'handwritten';
+      /*
+       * Empty on purpose. qc/type_gate.py fails until this is set, because the
+       * cheapest path is keeping whatever the scaffold shipped — and that is how
+       * every film came out with the same pairing. Choose the topic's register
+       * (js/type-presets.mjs), or 'custom' + window.BITS_TYPE_CUSTOM.
+       */
+      window.BITS_TYPE_PRESET = '';
     </script>
     <!-- Reads the key above and sets --font-display/-meta/-accent and their
          weights. Declares no @font-face: `hyperframes check` lints this file,
@@ -60,17 +66,8 @@
        *
        * Delete a font file this film does not use, and its rule with it.
        */
-      @font-face { font-family: 'Fredoka';           src: url('assets/fonts/Fredoka.ttf')         format('truetype'); font-weight: 300 700; font-display: block; }
-      @font-face { font-family: 'Baloo 2';           src: url('assets/fonts/Baloo2.ttf')          format('truetype'); font-weight: 400 800; font-display: block; }
-      @font-face { font-family: 'Shrikhand';         src: url('assets/fonts/Shrikhand.ttf')       format('truetype'); font-weight: 400;     font-display: block; }
       @font-face { font-family: 'Caveat';            src: url('assets/fonts/Caveat.ttf')          format('truetype'); font-weight: 400 700; font-display: block; }
-      @font-face { font-family: 'Patrick Hand';      src: url('assets/fonts/PatrickHand.ttf')     format('truetype'); font-weight: 400;     font-display: block; }
-      @font-face { font-family: 'Fraunces';          src: url('assets/fonts/Fraunces.ttf')        format('truetype'); font-weight: 100 900; font-display: block; }
-      @font-face { font-family: 'Libre Caslon Text'; src: url('assets/fonts/LibreCaslonText.ttf') format('truetype'); font-weight: 400 700; font-display: block; }
       @font-face { font-family: 'Anton';             src: url('assets/fonts/Anton.ttf')           format('truetype'); font-weight: 400;     font-display: block; }
-      @font-face { font-family: 'Space Grotesk';     src: url('assets/fonts/SpaceGrotesk.ttf')    format('truetype'); font-weight: 300 700; font-display: block; }
-      @font-face { font-family: 'Kalam';             src: url('assets/fonts/Kalam-Bold.ttf')      format('truetype'); font-weight: 700;     font-display: block; }
-      @font-face { font-family: 'Indie Flower';      src: url('assets/fonts/IndieFlower.ttf')     format('truetype'); font-weight: 400;     font-display: block; }
 
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body {
@@ -80,18 +77,29 @@
       }
       #root { position: relative; width: 1080px; height: 1920px; }
 
-      /* Safe box: x 120..780, y 240..1260 on 1080x1920.
-         Derived from @hyperframes/core/dist/safeAreas.js — its TikTok band is
-         declared at 720x1280 as [top,bottom,left,right] = [160,560,80,640] and
-         [560,840,80,520]; scaled to 1080x1920 that is x 120..780, y 240..1260.
-         Measured: L110 flagged / L130 clean, T240 flagged / T300 clean,
-         B1240 flagged / B1200 clean, R780 flagged. It is the strictest of the
-         three platforms, so fitting it fits Reels and Shorts too. */
+      /* Content box: x 54..1026, y 250..1536 on 1080x1920 — 13% top, 20%
+         bottom, 5% on both sides. 972x1286, 60% of the frame, centre x 540 /
+         y 893: horizontally the frame centre, so ordinary centring works;
+         vertically 67 px high because the platforms stack their UI at the
+         bottom. Anything that must be read stays above y 1382 (28% from the
+         bottom, clear of a two-line caption).
+
+         One asymmetry remains, and it is not a margin: the action rail (like /
+         comment / share / audio) sits lower right, so below y 1056 (55%) the
+         right edge pulls in to x 950 (88%). Above that line the full width is
+         free. `npx hyperframes check` reports the ad guide's box instead
+         (@hyperframes/core/dist/safeAreas.js, "Vertical-ad guides", 35% bottom
+         for CTA + legal line); treat those findings as advisory.
+
+         Backgrounds may bleed past the box; everything still keeps 4% edge. */
 
       .clip { position: absolute; }
 
+      /* Register only: size, tracking, face. The position is the film's own
+         decision — a hardcoded corner here put the same label in the same
+         corner of every beat, which is what a template looks like.
+         Set left/top per film (and vary it between beats). */
       .meta {
-        left: 128px; top: 300px;
         font-family: var(--font-meta);
         font-weight: var(--font-meta-weight);
         font-size: 28px; letter-spacing: 6px; text-transform: uppercase;
@@ -102,8 +110,11 @@
          as a separate sibling behind the text, the gate read the page background
          and reported 1.01:1 for text that is plainly legible. */
       .card {
-        left: 140px; top: 880px;
-        width: 620px; min-height: 250px;
+        /* Position + width are placeholders to overwrite. The accent card is a
+           mechanism, not the house style: a topic that reads better as a field,
+           a stack or no block at all should not keep this one. */
+        left: 56px; top: 640px;
+        width: 930px; min-height: 300px;
         border-radius: 16px;
         background: var(--accent);
         color: #14060a;
@@ -130,26 +141,30 @@
       }
 
       .title {
-        left: 128px; top: 560px;
+        /* placeholder position: overwrite per film */
+        left: 56px; top: 470px;
         font-family: var(--font-display);
         font-weight: var(--font-display-weight);
         font-size: 72px; line-height: 1.08;
       }
 
-      /* A shape that moves for the whole film. Measured reason: the card only
-         appears at `wordAt`, so the 0.4 s between the cut and the word showed a
-         single small label and nothing else — the contact sheet caught it as a
-         near-empty thumbnail. This rule also guarantees the encoder always sees
-         motion in position. Sits inside the safe band (y 1230..1236 < 1260). */
-      .rule {
-        left: 140px; top: 1230px;
-        height: 6px; width: 620px;
-        border-radius: 3px;
-        background: var(--accent);
-        opacity: 0.55;
-        transform-origin: left center;
-        transform: scaleX(0);
-      }
+      /*
+       * NO PROGRESS BAR BY DEFAULT.
+       *
+       * The rule this scaffold used to ship protected two real failures: a gap
+       * between a cut and its word (a near-empty frame), and identical frames
+       * the encoder reports as a freeze. Both are properties of the timeline,
+       * not of one bar — so they are checked, not baked in:
+       *
+       *   - `freezedetect=n=0:d=1.0` must return nothing (RENDER.md §7);
+       *   - every beat must fill the cut-to-word gap with something visible.
+       *
+       * Keep motion alive however the topic wants it: a drifting shape, a
+       * breathing field, a moving camera, a real clock. A bar pinned to the
+       * same y in every film is a template. If a film genuinely wants a
+       * progress rule, add it and say why.
+       */
+      .rule { display: none; }
     </style>
   </head>
   <body>
@@ -157,7 +172,7 @@
       id="root"
       data-composition-id="main"
       data-start="0"
-      data-duration="9.6"
+      data-duration="5.2"
       data-width="1080"
       data-height="1920"
     >
@@ -168,30 +183,27 @@
         sheet came back with two blank thumbnails.
       -->
 
-      <!-- Lead-in: the title card, while nothing is narrated. -->
-      <div id="title" class="clip title" data-start="0" data-duration="1.7" data-track-index="0">
-        Kenapa kopi<br />bikin ngantuk?
-      </div>
+      <!--
+        ONE beat, as a demo of the mechanics — not the shape of your film.
 
-      <!-- Beat 1 — the word lands at 1.55 s. -->
-      <div id="b1card" class="clip card" data-start="1.0" data-duration="3.2" data-track-index="1">ngantuk</div>
-      <div id="b1meta" class="clip meta" data-start="1.0" data-duration="3.2" data-track-index="2">hook</div>
-      <div id="b1hand" class="clip hand" data-start="1.0" data-duration="3.2" data-track-index="3" style="left: 160px; top: 1150px">sebenarnya</div>
+        This used to be three beats of card + meta + hand at the same offsets,
+        which is exactly the mould every film then followed. A beat is whatever
+        the idea needs: one word, a diagram, an image, a shape that changes, or
+        a held frame with a reason written beside it.
 
-      <!-- Beat 2 — word at 4.72 s. -->
-      <div id="b2card" class="clip card" data-start="4.2" data-duration="2.8" data-track-index="1">adenosin</div>
-      <div id="b2meta" class="clip meta" data-start="4.2" data-duration="2.8" data-track-index="2">b1</div>
-      <div id="b2hand" class="clip hand" data-start="4.2" data-duration="2.8" data-track-index="3" style="left: 160px; top: 1150px">bukan itu</div>
+        What the demo does show (all of it measured, all of it required):
+          - the word lands 0.08 s before it is spoken (`words.json`, not a guess);
+          - the element is placed by a clip's data-start/data-duration window;
+          - .clip only paints inside that window — the runtime enforces it.
 
-      <!-- Beat 3 — word at 7.46 s; the closing line holds ≥2 s. -->
-      <div id="b3card" class="clip card" data-start="7.0" data-duration="2.6" data-track-index="1">6 jam</div>
-      <div id="b3meta" class="clip meta" data-start="7.0" data-duration="2.6" data-track-index="2">close</div>
-      <div id="b3hand" class="clip hand" data-start="7.0" data-duration="2.6" data-track-index="3" style="left: 160px; top: 1150px">ini yang penting</div>
+        What it deliberately does NOT show: where to put anything. Positions
+        below are a placeholder to overwrite; vary the zone (left / centre /
+        right / edge / full) between neighbours so two beats never sit the same.
+      -->
+      <div id="b1card" class="clip card" data-start="1.0" data-duration="4.2" data-track-index="1" style="left: 56px; top: 640px;">ngantuk</div>
 
       <!-- Narration. assets/ is read by relative path. -->
-      <div id="rule" class="clip rule" data-start="0" data-duration="9.6" data-track-index="9"></div>
-
-      <audio id="vo" data-start="0" data-duration="8" data-track-index="10" src="assets/voiceover.wav"></audio>
+      <audio id="vo" data-start="0" data-duration="5.2" data-track-index="10" src="assets/voiceover.wav"></audio>
     </div>
 
     <script>
@@ -206,49 +218,26 @@
       window.__timelines = window.__timelines || {};
       const tl = gsap.timeline({ paused: true });
 
-      const beats = [
-        { id: 'b1', start: 1.0, wordAt: 1.55, duration: 3.2 },
-        { id: 'b2', start: 4.2, wordAt: 4.72, duration: 2.8 },
-        { id: 'b3', start: 7.0, wordAt: 7.46, duration: 2.6 },
-      ];
+      /*
+       * One beat's mechanics, written out. Copy the pattern, not the layout.
+       *
+       * WORD_AT comes from audio/words.json for the word this beat says — never
+       * from a word count and never from a music beat.
+       */
+      const WORD_AT = 1.55;            // film seconds
+      const reveal = WORD_AT - 0.08;   // land just before the word is spoken
 
-      beats.forEach((b) => {
-        // Reveal 80 ms before the word so the card has landed by the time it is
-        // spoken — a deliberate pre-roll, not a defect. GUIDE §7 forbids text that
-        // is *plainly* early; 80 ms is under one frame of perception, and the gate
-        // samples at -150 ms so it still catches a real mistake.
-        const reveal = b.wordAt - 0.08;
-        tl.set('#' + b.id + 'card', { opacity: 0 }, 0);
-        tl.fromTo(
-          '#' + b.id + 'card',
-          { opacity: 0, scale: 0.94, transformOrigin: 'left center' },
-          { opacity: 1, scale: 1, duration: 0.3, ease: 'power3.out' },
-          reveal
-        );
-        // the annotation writes in just after the card lands
-        tl.set('#' + b.id + 'hand', { opacity: 0 }, 0);
-        tl.fromTo(
-          '#' + b.id + 'hand',
-          { opacity: 0, y: 10 },
-          { opacity: 1, y: 0, duration: 0.25, ease: 'power2.out' },
-          reveal + 0.18
-        );
-        // Continuous drift for the WHOLE beat: a drift that stops early leaves
-        // identical frames and the encoder reports a freeze.
-        tl.fromTo(
-          '#' + b.id + 'card',
-          { x: 0, y: 0 },
-          { x: 40, y: -16, duration: b.duration, ease: 'sine.inOut' },
-          b.start
-        );
-      });
+      // 1. the word arrives, on the spoken word
+      tl.fromTo('#b1card',
+        {opacity: 0, scale: 0.94, transformOrigin: 'left center'},
+        {opacity: 1, scale: 1, duration: 0.3, ease: 'power3.out'}, reveal);
 
-      // The progress rule: continuous motion for every frame of the film, and
-      // something on screen during the 0.4 s before each word lands.
-      // Contract rule 6: animate a transform, never width/height/left/top.
-      tl.fromTo('#rule', {scaleX: 0}, {scaleX: 1, duration: 9.6, ease: 'none'}, 0);
-
-      tl.to('#title', { opacity: 0, duration: 0.35, ease: 'power2.in' }, 1.6);
+      // 2. something moves for the whole beat. There is no progress bar in this
+      //    scaffold on purpose: the defect it hid (identical frames) is caught by
+      //    `freezedetect=n=0:d=1.0` on the export, and the gap before a word is
+      //    filled by whatever the beat is doing. Add a bar only if the film wants
+      //    one, and say why.
+      tl.fromTo('#b1card', {x: 0, y: 0}, {x: 40, y: -16, duration: 4.2, ease: 'sine.inOut'}, 1.0);
 
       window.__timelines['main'] = tl;
     </script>

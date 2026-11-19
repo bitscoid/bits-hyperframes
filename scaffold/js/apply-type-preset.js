@@ -29,6 +29,28 @@
   };
 
   var key = window.BITS_TYPE_PRESET || '';
+
+  // 'custom' names its three families directly in index.html, right below the
+  // preset key: {display: 'Family', meta: 'Family', accent: 'Family'}. The
+  // eight presets are a starting point, not the allowed set.
+  if (key === 'custom') {
+    var c = window.BITS_TYPE_CUSTOM;
+    if (!c || !c.display || !c.meta || !c.accent) {
+      throw new Error('[type] BITS_TYPE_PRESET is "custom" but BITS_TYPE_CUSTOM is missing display/meta/accent.');
+    }
+    var apply = function (f, w, m, a) {
+      var r = document.documentElement.style;
+      r.setProperty('--font-display', "'" + f + "', sans-serif");
+      r.setProperty('--font-meta', "'" + m + "', monospace");
+      r.setProperty('--font-accent', "'" + a + "', cursive");
+      r.setProperty('--font-display-weight', String(w || 400));
+      r.setProperty('--font-meta-weight', String(w || 400));
+      r.setProperty('--font-accent-weight', '700');
+    };
+    apply(c.display, c.displayWeight, c.meta, c.accent);
+    return;
+  }
+
   var preset = PRESETS[key];
 
   if (!preset) {

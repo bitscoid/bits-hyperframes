@@ -134,10 +134,37 @@ elif not chosen:
         "window.BITS_TYPE_PRESET is empty. Pick the topic's register in stage 4:\n    "
         + "\n    ".join(sorted(table))
     )
+elif chosen == "custom":
+    # The eight presets are a starting point, not a menu: GUIDE §2 says pick
+    # typography for the topic, which means a face the table does not list. A
+    # custom triple is legitimate as long as every family actually resolves —
+    # the failure the preset list was guarding against was a silent fallback,
+    # not an unfamiliar name.
+    m = re.search(r"window\.BITS_TYPE_CUSTOM\s*=\s*\{([^}]*)\}", index)
+    if not m:
+        findings.append(
+            'BITS_TYPE_PRESET is "custom" but window.BITS_TYPE_CUSTOM is not set in index.html.\n'
+            "    Expected: {display: 'Family', meta: 'Family', accent: 'Family'}"
+        )
+    else:
+        fams = dict(re.findall(r"(display|meta|accent)\s*:\s*'([^']+)'", m.group(1)))
+        if sorted(fams) != ["accent", "display", "meta"]:
+            findings.append("window.BITS_TYPE_CUSTOM must name display, meta and accent.")
+        elif len(set(fams.values())) < 3:
+            findings.append("window.BITS_TYPE_CUSTOM reuses a family across roles.")
+        else:
+            for role, fam in fams.items():
+                if fam not in BUNDLED and not re.search(
+                    r"@font-face\s*\{[^}]*font-family:\s*'" + re.escape(fam) + "'", index
+                ):
+                    findings.append(
+                        f'custom {role} family "{fam}" is neither bundled nor declared by an\n'
+                        f"    @font-face in index.html — it would render in the fallback."
+                    )
 elif chosen not in table:
     findings.append(
-        f'window.BITS_TYPE_PRESET "{chosen}" is not a preset. Valid keys:\n    '
-        + "\n    ".join(sorted(table))
+        f'window.BITS_TYPE_PRESET "{chosen}" is not a preset, and is not "custom". Valid keys:\n    '
+        + "\n    ".join(sorted(table) + ["custom"])
     )
 
 # --- the three roles, and whether their faces resolve -------------------------

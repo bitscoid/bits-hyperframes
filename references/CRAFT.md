@@ -44,15 +44,28 @@ Never `linear` for visible motion except a constant drift or a progress rule.
 
 These are what separate a postable frame from a test render.
 
-1. **Type fills 50–80% of the frame width.** Small text reads as a caption, not as the visual.
-   Size to the frame, never to a comfortable font size.
-2. **One idea on screen at a time**: 1–4 words, at most 3 lines.
-3. **Every word arrives with a move.** Nothing simply fades in.
-4. **Changes land on a rhythm**: a new word or move every 0.25–0.7 s, keywords on the spoken
-   word.
-5. **Contrast is extreme**: near-black on off-white or the reverse, plus one accent colour for
-   the key word only.
-6. **Each phrase gets one hero word**: biggest, accent-coloured, or moving differently.
+Two of the rules below are floors the gates can measure; the rest are taste, and taste is
+yours. Graded numbers here would break this skill's own *Rules vs taste* test — a rule earns its
+place only if it is provable **and** leaves the creative choice open.
+
+**Floors (measured):**
+
+1. **Contrast is extreme enough to pass.** Near-black on off-white or the reverse, plus an accent
+   that clears 3.0:1 as primary and 4.5:1 as supporting. The measured ratio decides, not the mood.
+2. **Readable at phone size.** Cap height ≥4% of the short side for keywords, ≥2.5% for labels
+   (`GUIDE.md` §2). This is what stops type becoming a caption.
+
+**Taste (yours, and worth breaking deliberately):**
+
+3. **The frame has a focal point.** One element should be the thing the eye lands on first. How
+   big, centred or loud it is: your call.
+4. **Words arrive the way the idea arrives.** Slam, cascade, reveal, or a held frame that was
+   already there. What fails is a word that appears without any decision behind it — not a word
+   that holds still on purpose.
+5. **Rhythm follows the narration.** The spoken word sets the beat; the events between words can
+   be dense, sparse, or silent. Nothing here fixes the interval.
+6. **One phrase, one degree of emphasis.** Not the same weight on every line, not a rainbow.
+   Which word carries it, and how, is the design.
 
 ## 4. Velocity continuity — the cause of "choppy"
 

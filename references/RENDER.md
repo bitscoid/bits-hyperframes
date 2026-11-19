@@ -396,39 +396,65 @@ from looking like a slideshow, §4 why a spliced curve reads as choppy at 30 fps
 animate text without reflowing or blurring it.
 
 **A reveal scheduled at the word leaves a hole at the cut.** The card appears only at
-`wordAt`, so the ~0.4 s between the cut and the word showed one small label and nothing else —
-the contact sheet caught it as a near-empty thumbnail. Keep one shape moving for the whole film:
-a progress rule at `scaleX 0→1` across `data-duration`. It fills the gap and guarantees the
-encoder always sees a position change. Animate `scaleX`, never `width` — contract rule 6.
+`wordAt`, so the ~0.4 s between the cut and the word can show one small label and nothing else —
+a near-empty thumbnail. The defect is real; a progress bar across the bottom is one answer, not
+the answer. Fill the gap with whatever the beat's idea wants — a drifting shape, a breathing
+field, a camera push, a shape that is already on its way — and prove it with
+`freezedetect=n=0:d=1.0` returning nothing. A bar pinned to the same y in every film is a
+template; if a film wants one, add it and say why.
 
 **Text belongs to one element.** A word inside an accent card is one element with
 `background`, `color` and `padding` — not a block with a text sibling on top. Measured: with
 the block as a sibling, the contrast gate read the page background and reported 1.01:1 for
 text that is plainly legible.
 
-### Safe area — measured, stricter than you expect
+### Safe area — one box for organic short-form
 
-HyperFrames checks every text against three platform bands. The strictest is TikTok, declared
-in `@hyperframes/core/dist/safeAreas.js` at a 720×1280 reference as
-`[top, bottom, left, right]` = `[160, 560, 80, 640]` and `[560, 840, 80, 520]`. Scaled to
-1080×1920 that is **x 120..780, y 240..1260**.
+On `1080×1920`: **13% top, 20% bottom, 5% left and right** — `x 54..1026, y 250..1536`, a
+972×1286 box covering **60% of the frame**, centre x 540 / y 893. The sides are symmetric, so
+the horizontal centre is the frame centre; only the vertical centre sits 67 px high.
 
-Probed on this machine with single text nodes:
+```css
+.content { position: absolute; inset: 13% 5% 20% 5%; }
+```
 
-| Position | Verdict |
-|---|---|
-| left 110 | flagged |
-| left 130 | clean |
-| top 240 | flagged |
-| top 300 | clean |
-| bottom 1240 | flagged |
-| bottom 1200 | clean |
-| right 780 | flagged |
+One asymmetry survives, and it is not a margin — it is the **action rail**. TikTok and Shorts
+draw like / comment / share / audio down the lower right, so below **55% of the height**
+(`y > 1056`) the right edge pulls in to **88%** (`x ≤ 950`). Above that line the full 5% applies,
+so a headline across the top half can use the whole width.
 
-Design to this box, and treat it as the floor rather than a target: anything that must be
-read stays well inside it. A 4%-of-edge margin is nowhere near enough on a phone.
+The bottom margin is the largest because that is where every vertical platform stacks its UI —
+caption, username, audio ticker, progress bar, OS gesture bar — while the top carries only a
+header. The numbers match the two sources in this repo that describe organic short-form:
+`_vendor/explainer-video-skills/skills/wrapped-video/references/scene-grammar.md` (top 12%,
+bottom 18%, sides 5%) and `_vendor/motioner/references/typography.md` (top 250 px, bottom
+400 px on a 1080-wide frame). Top is 13% to clear the taller of the two.
 
-`npx hyperframes check` reports the exact box and platform per finding.
+Anything that must be read sits above **28% from the bottom** (y ≤ 1382), clear of a two-line
+caption.
+
+**`check` reports the ad box, not this one.** `@hyperframes/core/dist/safeAreas.js` is titled
+*"Vertical-ad guides"*: its 35% bottom reserves a CTA button, legal line and shop card for a
+paid in-feed ad. Treat a `check` finding outside its box as **advisory** — it is not the target,
+and designing to it empties the lower third of an organic frame.
+
+The box binds **content**. Backgrounds, gradients, grain and shapes that carry no meaning may
+bleed past it — they still obey the 4% edge.
+
+**Landscape is different: there is no box.** No feed UI overlays a 16:9 player, so a
+`1920×1080` film keeps the plain 4% edge on every side and nothing else. Anything that must be
+read — a keyword, a number, a verdict, **and every burned-in caption** — sits inside **10%**
+(Adobe title-safe: `x 192..1728, y 108..972`). Fitting the portrait box to a landscape frame
+would waste half the width for UI that never appears.
+
+A caption near the bottom edge is the trap: the common 80–120 px floor lands at `y 960..1000`,
+crossing the title-safe line at `y 972`. Put it inside the box — a baseline at `y 972` reads as
+108 px from the bottom and costs nothing an audience notices.
+
+Tag text so a gate can find it: `data-qc="display"` or `"readable"` for anything that must be
+read, `data-qc="caption"` for burned-in subtitles, `data-qc="deco"` for paint that may be
+cropped. Captions and readable text are held to the read line in portrait and to title-safe in
+landscape; `deco` is held only to the 4% edge.
 
 ## 6. Audio mixing and export
 
@@ -614,11 +640,33 @@ Everything else is reported with its number and a decision.
 
 ## 8. Self-made background music
 
-Only when the user supplies none. Generate a simple ambient pad with ffmpeg — several chord
-tones at low volume plus a light pulse — into `assets/music.wav`, and add it as an `<audio>`
-tag with `data-volume` around 0.25.
+Only when the user supplies none. Use the bundled generator — a one-chord pad is what made
+every film from these skills sound the same:
 
-Tell the user plainly that this is simple synthesised music, not a professional composition.
+```bash
+python3 <skill>/scripts/make_music.py --duration 52 --out assets/music.wav --tempo 84 --mood warm
+```
+
+`<skill>` is this skill's own directory; the generator ships with the skill, so the
+project folder stays free of build tooling. Run it from the project folder.
+
+It writes 48 kHz stereo 16-bit WAV at exactly `--duration` (never loop a short bed), peak
+−6 dBFS, 1.2 s fade-in, and a fade-out that lands on a floor rather than absolute zero.
+
+What it plays: a four-chord progression (two bars per chord), each chord carrying a detuned
+two-voice pad, a root bass on beats 1 and 3, a plucked arpeggio on eighths alternating pan,
+and a soft noise breath at every chord change.
+
+| Flag | Values | Choose by |
+|---|---|---|
+| `--mood` | `warm` (Am–F–C–G) · `dark` (Dm–B♭–F–C) · `bright` (C–Em–Am–F) | the topic's tone; `dark` for history/analysis, `bright` for light explainers |
+| `--tempo` | 60–100, default 84 | the film's cut rhythm; faster film, faster bed. Keep it under the cut rate so it never fights the narration |
+
+Add it with an `<audio>` tag and `data-volume` around 0.22. Re-run the same command with a
+different `--mood`/`--tempo` per film rather than reusing one bed across a series.
+
+Tell the user plainly that this is synthesised music — a progression and a pulse generated in
+code, not a composed track — and suggest royalty-free music when they want more.
 
 Optional synthetic SFX:
 
@@ -653,8 +701,9 @@ require scenes to start on beats.
   contact sheet shows duplicates. Animate over the full duration.
 - **`data-duration` copied from the orientation cap** instead of the script. A 9 s script in
   a 60 s composition is 87% dead. Derive the number from the last beat.
-- **Text outside the platform band.** TikTok needs x 120..780, y 240..1260 on 1080×1920.
-  Check reports the exact box per finding.
+- **Text outside the content box.** Content needs x 54..1026, y 250..1536 on 1080×1920, with the
+  right edge pulled to x 950 below y 1056. `check` reports the TikTok ad box (x 120..780,
+  y 240..1260) instead — a `check` finding there is not a defect for organic work.
 - **Font not declared.** Lint fails `font_family_without_font_face`; a `local()`-only face
   works here and fails in the cloud (`font_face_local_only`).
 - **`timeline_track_too_dense`** is advice, not a defect: past ~10 timed elements, split into

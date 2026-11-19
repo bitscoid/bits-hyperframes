@@ -19,6 +19,9 @@
 
 /**
  * Set this from the topic's register in stage 4. Empty on purpose.
+ * Use 'custom' when no register fits the topic: then set
+ * window.BITS_TYPE_CUSTOM = {display: '…', meta: '…', accent: '…'} in index.html
+ * and declare each face with an @font-face. The gate checks they resolve.
  * @type {'' | 'playful-rounded' | 'playful-bold' | 'poster-display' | 'editorial' | 'archival' | 'kinetic-impact' | 'technical' | 'handwritten'}
  */
 export const TYPE_PRESET = '';
