@@ -57,6 +57,21 @@
         left: 128px; top: 560px;
         font-size: 72px; line-height: 1.08; font-weight: 900;
       }
+
+      /* A shape that moves for the whole film. Measured reason: the card only
+         appears at `wordAt`, so the 0.4 s between the cut and the word showed a
+         single small label and nothing else — the contact sheet caught it as a
+         near-empty thumbnail. This rule also guarantees the encoder always sees
+         motion in position. Sits inside the safe band (y 1230..1236 < 1260). */
+      .rule {
+        left: 140px; top: 1230px;
+        height: 6px; width: 620px;
+        border-radius: 3px;
+        background: var(--accent);
+        opacity: 0.55;
+        transform-origin: left center;
+        transform: scaleX(0);
+      }
     </style>
   </head>
   <body>
@@ -93,6 +108,8 @@
       <div id="b3meta" class="clip meta" data-start="7.0" data-duration="2.6" data-track-index="2">close</div>
 
       <!-- Narration. assets/ is read by relative path. -->
+      <div id="rule" class="clip rule" data-start="0" data-duration="9.6" data-track-index="9"></div>
+
       <audio id="vo" data-start="0" data-duration="8" data-track-index="10" src="assets/voiceover.wav"></audio>
     </div>
 
@@ -132,6 +149,11 @@
           b.start
         );
       });
+
+      // The progress rule: continuous motion for every frame of the film, and
+      // something on screen during the 0.4 s before each word lands.
+      // Contract rule 6: animate a transform, never width/height/left/top.
+      tl.fromTo('#rule', {scaleX: 0}, {scaleX: 1, duration: 9.6, ease: 'none'}, 0);
 
       tl.to('#title', { opacity: 0, duration: 0.35, ease: 'power2.in' }, 1.6);
 

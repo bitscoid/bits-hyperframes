@@ -305,6 +305,12 @@ grep -oE 'data-start="[0-9.]+" data-duration="[0-9.]+"' index.html \
 **Drift must last the whole beat.** A drift that stops after one second leaves identical
 frames, and the encoder reports a freeze. Animate `x`/`y` over the full `data-duration`.
 
+**A reveal scheduled at the word leaves a hole at the cut.** The card appears only at
+`wordAt`, so the ~0.4 s between the cut and the word showed one small label and nothing else —
+the contact sheet caught it as a near-empty thumbnail. Keep one shape moving for the whole film:
+a progress rule at `scaleX 0→1` across `data-duration`. It fills the gap and guarantees the
+encoder always sees a position change. Animate `scaleX`, never `width` — contract rule 6.
+
 **Text belongs to one element.** A word inside an accent card is one element with
 `background`, `color` and `padding` — not a block with a text sibling on top. Measured: with
 the block as a sibling, the contrast gate read the page background and reported 1.01:1 for
