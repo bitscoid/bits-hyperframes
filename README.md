@@ -31,7 +31,7 @@ The output is an **MP4 (H.264 + AAC, 30 fps, constant frame rate)** whose length
 | Portrait `1080×1920` | **60 s** | Reels / TikTok / Shorts |
 | Landscape `1920×1080` | **300 s** (5 min) | YouTube explainer |
 
-Longer only when you ask. Orientation is chosen in stage 1, before the script is written, because it sets the cap; a supplied reference must match that orientation and never changes it. Without a preference it asks, and falls back to **1920×1080** landscape or **1080×1920** portrait.
+Longer only when you ask. Orientation is chosen in stage 1, before the script is written, because it sets the cap; a supplied reference must match that orientation and never changes it. Without an answer it asks once, then defaults to **1920×1080** landscape.
 
 ---
 
@@ -138,7 +138,7 @@ The lower bound is the encoder, not taste: motion under ~10 px can be quantised 
 
 Scenes with the same structural signature get flagged so you can decide: *deliberate motif* or *coincidence to fix*. The gate forces that decision to be written down; it never homogenises the output.
 
-Signatures compare ink against each frame's own modal luma, so a dark theme with light text works — a fixed luma threshold measures the background instead and returns an identical centroid for every scene.
+Signatures are the `data-qc` boxes: same role, same size, same position on consecutive beats means the layout did not change. No pixels are read, so a dark theme with light text is not a special case.
 
 </details>
 

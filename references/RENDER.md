@@ -125,12 +125,44 @@ ffprobe -v error -show_entries format=duration -of csv=p=0 "assets/voiceover.wav
 Word timing: **speech recognition first, word-count estimation last.** ~2.5 words/second
 exists only to sanity-check script length, never to place text.
 
-**A. whisper.cpp** (installed at `_install/whisper.cpp`, model `ggml-small.bin`)
+**A. whisper.cpp** — fastest on CPU, no Python. Install once per machine, outside the project,
+so the binary and the 488 MB model are not copied per video:
 
 ```bash
-whisper.cpp/build/bin/whisper-cli \
-  -m whisper.cpp/ggml-small.bin \
+# once
+WHISPER_DIR="$HOME/.local/share/whisper.cpp"
+git clone --depth 1 https://github.com/ggml-org/whisper.cpp "$WHISPER_DIR"
+cmake -S "$WHISPER_DIR" -B "$WHISPER_DIR/build" && cmake --build "$WHISPER_DIR/build" -j
+"$WHISPER_DIR"/models/download-ggml-model.sh small
+
+# per video
+"$WHISPER_DIR/build/bin/whisper-cli" \
+  -m "$WHISPER_DIR/models/ggml-small.bin" \
   -f work/voiceover-16k.wav -l id -oj -of work/words
+```
+
+`-oj` writes `work/words.json`, which `work/` is deleted in §10. Copy it to the durable path
+before anything else, converting whisper.cpp's millisecond offsets:
+
+```bash
+python3 - <<'PY'
+import json
+raw = json.load(open("work/words.json"))
+segs = []
+for t in raw["transcription"]:
+    segs.append({
+        "start": t["offsets"]["from"] / 1000,
+        "end": t["offsets"]["to"] / 1000,
+        "text": t["text"].strip(),
+        "words": [{"word": w["text"].strip(),
+                   "start": w["offsets"]["from"] / 1000,
+                   "end": w["offsets"]["to"] / 1000}
+                  for w in t.get("tokens", []) if w["text"].strip()],
+    })
+json.dump({"vo_delay": 1.0, "segments": segs},
+          open("audio/words.json", "w"), ensure_ascii=False, indent=1)
+print("wrote audio/words.json:", len(segs), "segments")
+PY
 ```
 
 Measured: 3 s of audio in 14.9 s, CPU only, `small` model.
@@ -338,7 +370,9 @@ inside it.
 
 ## 6. Audio mixing and export
 
-Duration follows the voiceover:
+Duration follows the voiceover, and the root's `data-duration` is **the last clip's end** —
+not the voiceover plus a tail, and not the cap (§5 has the three measured failures of getting
+this wrong).
 
 ```bash
 ORIENT=portrait
@@ -346,13 +380,22 @@ case "$ORIENT" in
   portrait)  MAX_DUR=60 ;;
   landscape) MAX_DUR=300 ;;
 esac
+
+# the answer: the last clip's end, read from the composition itself
+DUR=$(grep -oE 'data-start="[0-9.]+" data-duration="[0-9.]+"' index.html \
+  | awk -F'"' '{e=$2+$4; if (e>m) m=e} END {print m}')
+
+# the constraint it must satisfy
 VO_DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 assets/voiceover.wav)
-DUR=$(awk -v v="$VO_DUR" 'BEGIN{t=v+2.5; d=int(t); if (d<t) d++; print d}')
-echo "orient=$ORIENT voiceover=$VO_DUR total=$DUR s frames=$((DUR*30)) cap=$MAX_DUR"
+awk -v vo="$VO_DUR" -v d="$DUR" -v cap="$MAX_DUR" -v o="$ORIENT" 'BEGIN{
+  if (d < vo)       print "FAIL: clips end at " d "s but the voiceover runs " vo "s — add a beat"
+  else if (d > cap) print "OVER CAP " cap " s for " o ": stop and ask the user"
+  else              print "ok: " d " s, " d*30 " frames, voiceover " vo " s, cap " cap " s"
+}'
 ```
 
-Put that number into the root's `data-duration`, and set every `<audio data-duration>` to the
-media length so lint does not warn `clip_media_fit`.
+Whatever `DUR` is, every `<audio data-duration>` must equal the media length, or lint warns
+`clip_media_fit` and the audio is silently truncated.
 
 **Audio is placed by tags, then normalised after export.** HyperFrames mixes `<audio>`
 elements and does **not** normalise loudness — measured −34.5 LUFS for a sine at 0.8 volume.
@@ -453,6 +496,22 @@ ffmpeg -i renders/<slug>.mp4 -vf "blackdetect=d=0.5:pix_th=0.02" -an -f null - 2
 `freezedetect` needs `n=0`: the default `n=0.001` (about −60 dB) false-positives on flat
 graphics, and `n` is a linear 0–1 ratio, not a dB value. `blackdetect` needs `pix_th=0.02`:
 a `0x0B0B0F` background reads as black from `0.05` up.
+
+### Repetition gate
+
+`check` does not compare beats to each other. Do it yourself, from the same DOM the sync gate
+already reads:
+
+```bash
+python3 qc/make_sync_probe.py     # writes work/sync-probe.json with boxes per sample
+```
+
+For every pair of consecutive beats, compare the `data-qc` boxes: same role, same size, same
+position means the layout did not change. A deliberate pair is legitimate — a before/after, a
+repeated motif. **Three in a row is the signature of a template.** When it is deliberate, write
+the reason beside the beat so the next revision does not "fix" it.
+
+No pixels are read, so a dark theme with light text is not a special case.
 
 ### Contact sheet
 

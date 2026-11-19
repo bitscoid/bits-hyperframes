@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1080, height=1920" />
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <!-- GSAP is vendored in assets/vendor/, not fetched at render time:
+         the render contract forbids network fetches, and an offline render
+         machine would otherwise produce a dead composition.
+         Get it once: cp node_modules/gsap/dist/gsap.min.js assets/vendor/ -->
+    <script src="assets/vendor/gsap.min.js"></script>
     <style>
       :root {
         /* Replace all three with the film's own palette. */
@@ -132,6 +136,10 @@
       ];
 
       beats.forEach((b) => {
+        // Reveal 80 ms before the word so the card has landed by the time it is
+        // spoken — a deliberate pre-roll, not a defect. GUIDE §7 forbids text that
+        // is *plainly* early; 80 ms is under one frame of perception, and the gate
+        // samples at -150 ms so it still catches a real mistake.
         const reveal = b.wordAt - 0.08;
         tl.set('#' + b.id + 'card', { opacity: 0 }, 0);
         tl.fromTo(

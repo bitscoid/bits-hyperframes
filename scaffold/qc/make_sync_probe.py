@@ -45,6 +45,7 @@ request = json.dumps({"composition": str(ROOT / "index.html"), "times": times}).
 
 script = r"""
 const fs = require('node:fs');
+const {execSync} = require('node:child_process');
 const path = require('node:path');
 
 function findChrome() {
@@ -66,14 +67,20 @@ function findChrome() {
 const exe = findChrome();
 if (!exe) { console.error('no browser; run: npx hyperframes browser ensure'); process.exit(2); }
 
+// puppeteer-core ships with the HyperFrames install. Look in the project first,
+// then in the global npm root, so the probe is not tied to one machine's layout.
 let puppeteer;
-for (const base of [
-  path.join(process.env.HOME, 'Motion-Skills/_install/node_modules'),
-  path.join(process.cwd(), 'node_modules'),
-]) {
+const bases = [path.join(process.cwd(), 'node_modules')];
+try {
+  bases.push(execSync('npm root -g', {encoding: 'utf8'}).trim());
+} catch (e) {}
+for (const base of bases) {
   try { puppeteer = require(require.resolve('puppeteer-core', {paths: [base]})); break; } catch (e) {}
 }
-if (!puppeteer) { console.error('puppeteer-core not found'); process.exit(2); }
+if (!puppeteer) {
+  console.error('puppeteer-core not found. Install it in the project:\n  npm install --no-save puppeteer-core');
+  process.exit(2);
+}
 
 (async () => {
   const req = JSON.parse(fs.readFileSync(0, 'utf8'));
