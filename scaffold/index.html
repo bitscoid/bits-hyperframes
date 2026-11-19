@@ -8,6 +8,10 @@
          machine would otherwise produce a dead composition.
          Get it once: cp node_modules/gsap/dist/gsap.min.js assets/vendor/ -->
     <script src="assets/vendor/gsap.min.js"></script>
+    <!-- Applies the type preset chosen in stage 4: sets --font-display,
+         --font-meta, --font-accent and declares any @font-face the preset
+         needs. Set BITS_TYPE_PRESET in the script below. -->
+    <script src="js/apply-type-preset.js"></script>
     <style>
       :root {
         /* Replace all three with the film's own palette. */
@@ -16,30 +20,44 @@
         --accent: #c63b2b;
 
         /*
-         * Font roles. Pick by the topic's register, not by what is installed —
-         * the catalogue in references/RENDER.md §1 lists the choices.
+         * Font roles. These are FALLBACKS — js/apply-type-preset.js overwrites
+         * them from the preset chosen in stage 4.
          *
-         * HyperFrames bundles only 18 families by name, and NONE of them is
-         * handwriting, doodle or rounded: Inter, Montserrat, Outfit, Nunito,
-         * Oswald, League Gothic, Archivo Black, Space Mono, IBM Plex Mono,
-         * JetBrains Mono, EB Garamond, Playfair Display, Source Code Pro,
-         * Noto Sans JP, Roboto, Open Sans, Lato, Poppins.
+         * HyperFrames bundles only 18 families by name, and none of them is
+         * handwriting, doodle or rounded display. The playful faces therefore
+         * ship in assets/fonts/ and get declared by the same script.
          *
-         * So the playful fonts below are shipped in assets/fonts/ and declared
-         * with @font-face. A family that renders but is not declared fails lint
-         * `font_family_without_font_face`.
+         * Do not hardcode a family here: a default in the file is the cheapest
+         * path, and the cheapest path is what made every film look identical.
          */
-        --font-display: 'Fredoka', sans-serif;          /* heavy, rounded, friendly */
+        --font-display: 'Fredoka', sans-serif;          /* overwritten by the preset */
         --font-meta: 'JetBrains Mono', monospace;       /* labels, indices */
         --font-accent: 'Caveat', cursive;               /* the annotation hand */
       }
 
-      /* Shipped in assets/fonts/. Delete the ones this film does not use. */
-      @font-face { font-family: 'Caveat';      src: url('assets/fonts/Caveat.ttf')      format('truetype'); font-display: block; }
-      @font-face { font-family: 'PatrickHand'; src: url('assets/fonts/PatrickHand.ttf') format('truetype'); font-display: block; }
-      @font-face { font-family: 'Fredoka';     src: url('assets/fonts/Fredoka.ttf')     format('truetype'); font-display: block; }
-      @font-face { font-family: 'Baloo2';      src: url('assets/fonts/Baloo2.ttf')      format('truetype'); font-display: block; }
-      @font-face { font-family: 'Shrikhand';   src: url('assets/fonts/Shrikhand.ttf')   format('truetype'); font-display: block; }
+      /*
+       * Every family any preset can name must be declared HERE, statically:
+       * `hyperframes check` lints the file, not the DOM, so a face added by
+       * script is invisible to it and fails `font_family_without_font_face`.
+       *
+       * The families HyperFrames bundles (Inter, Poppins, Nunito, JetBrains
+       * Mono, Space Mono, IBM Plex Mono, Montserrat, …) need no rule. The ones
+       * below are shipped in assets/fonts/ because the bundle has no playful or
+       * handwriting register.
+       *
+       * Delete a font file this film does not use, and its rule with it.
+       */
+      @font-face { font-family: 'Fredoka';         src: url('assets/fonts/Fredoka.ttf')      format('truetype'); font-display: block; }
+      @font-face { font-family: 'Baloo2';          src: url('assets/fonts/Baloo2.ttf')       format('truetype'); font-display: block; }
+      @font-face { font-family: 'Shrikhand';       src: url('assets/fonts/Shrikhand.ttf')    format('truetype'); font-display: block; }
+      @font-face { font-family: 'Caveat';          src: url('assets/fonts/Caveat.ttf')       format('truetype'); font-display: block; }
+      @font-face { font-family: 'PatrickHand';     src: url('assets/fonts/PatrickHand.ttf')  format('truetype'); font-display: block; }
+      @font-face { font-family: 'Fraunces';        src: url('assets/fonts/Fraunces.ttf')     format('truetype'); font-display: block; }
+      @font-face { font-family: 'LibreCaslonText'; src: url('assets/fonts/LibreCaslonText.ttf') format('truetype'); font-display: block; }
+      @font-face { font-family: 'Anton';           src: url('assets/fonts/Anton.ttf')        format('truetype'); font-display: block; }
+      @font-face { font-family: 'SpaceGrotesk';    src: url('assets/fonts/SpaceGrotesk.ttf') format('truetype'); font-display: block; }
+      @font-face { font-family: 'Kalam';           src: url('assets/fonts/Kalam-Bold.ttf')   format('truetype'); font-display: block; }
+      @font-face { font-family: 'IndieFlower';     src: url('assets/fonts/IndieFlower.ttf')  format('truetype'); font-display: block; }
 
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body {
@@ -168,6 +186,9 @@
        * error at all — the element sat at the same x in every frame until this
        * was changed to `window.__timelines[id] = gsap.timeline()`.
        */
+      // Chosen from the topic in stage 4. qc/type_gate.py fails while this is empty.
+      window.BITS_TYPE_PRESET = 'playful-rounded';
+
       window.__timelines = window.__timelines || {};
       const tl = gsap.timeline({ paused: true });
 

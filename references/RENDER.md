@@ -84,6 +84,29 @@ does this already, with five families ready to swap in:
 
 Delete the ones a film does not use; each is 100–680 KB and they are shipped per project.
 
+**The register is a required choice, not a default.** `js/type-presets.mjs` holds eight, each a
+display + meta + accent triple with the reason it suits a topic:
+
+| Preset | Display | Meta | Accent | When |
+|---|---|---|---|---|
+| `playful-rounded` | Fredoka | JetBrains Mono | Caveat | food, habits, kids, everyday science |
+| `playful-bold` | Baloo 2 | Nunito | Patrick Hand | fitness, productivity, how-to |
+| `poster-display` | Shrikhand | Poppins | Caveat | culture, music, opinion |
+| `editorial` | Fraunces | JetBrains Mono | Caveat | essay, history, analysis |
+| `archival` | Libre Caslon | Space Mono | Kalam | financial, legal, historical |
+| `kinetic-impact` | Anton | JetBrains Mono | Caveat | statistics, records, hooks |
+| `technical` | Space Grotesk | IBM Plex Mono | Kalam | systems, code, data |
+| `handwritten` | Caveat | Nunito | Indie Flower | first-person, reflective |
+
+Set `window.BITS_TYPE_PRESET` in `index.html`. `python3 qc/type_gate.py` fails on an empty key,
+on one family carrying all three roles, and on repeating the previous film's preset in the same
+folder.
+
+`js/apply-type-preset.js` reads the key and writes the three CSS variables. Measured trap:
+injecting the `@font-face` rules from that script fails `font_family_without_font_face` —
+`check` lints the static file, not the DOM — so every preset's families are declared in
+`index.html` and the script only sets the variables.
+
 The bundle has Latin at a few weights per family. Other weights and scripts are fetched from
 Google Fonts and cached in `~/.cache/hyperframes/fonts`.
 

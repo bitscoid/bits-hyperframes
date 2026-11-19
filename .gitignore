@@ -8,3 +8,5 @@ audio/
 *.mp4
 *.srt
 .DS_Store
+__pycache__/
+*.pyc
