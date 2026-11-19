@@ -1,73 +1,54 @@
 /**
  * Applies the chosen type preset to the DOM before the timeline is built.
  *
- * Writes the three CSS variables and declares the fonts the preset names, so
- * index.html carries no hardcoded family. Runs as a classic script (no module
- * loader) because the render contract forbids waiting on anything but the
- * registered timeline.
+ * Writes the three family variables and the three weight variables, and nothing
+ * else. Every @font-face stays declared statically in index.html: `hyperframes
+ * check` lints that file, not the DOM, so a face injected here is invisible to
+ * it and fails `font_family_without_font_face`.
  *
- * Measured: a font declared but not preloaded lets the first frames render in
- * the fallback, and the contact sheet then shows two faces in one film. The
- * `font-display: block` plus the explicit document.fonts.load below prevents it.
+ * Loaded AFTER the inline `window.BITS_TYPE_PRESET = ...` in <head>. It used to
+ * run first, read an unset key and quietly fall back to the CSS defaults, which
+ * is how every film ended up on the same pairing while the gate reported OK.
+ *
+ * An unset or unknown key throws, so the composition stops instead of rendering
+ * in a family nobody chose. `qc/type_gate.py` reports the same thing earlier,
+ * with the list of valid keys.
  */
 (function () {
-  // Mirrors js/type-presets.mjs — kept inline so this file works without a
-  // bundler. If you add a preset, add it here too.
+  // Mirrors js/type-presets.mjs. Both are read by qc/type_gate.py, which fails
+  // when the two disagree, so this copy cannot drift unnoticed.
   var PRESETS = {
-    'playful-rounded': {display: 'Fredoka', meta: 'JetBrains Mono', accent: 'Caveat', dw: 600, mw: 500, aw: 700},
-    'playful-bold': {display: 'Baloo2', meta: 'Nunito', accent: 'PatrickHand', dw: 700, mw: 700, aw: 400},
-    'poster-display': {display: 'Shrikhand', meta: 'Poppins', accent: 'Caveat', dw: 400, mw: 600, aw: 700},
-    editorial: {display: 'Fraunces', meta: 'JetBrains Mono', accent: 'Caveat', dw: 700, mw: 500, aw: 700},
-    archival: {display: 'LibreCaslonText', meta: 'SpaceMono', accent: 'Kalam', dw: 700, mw: 700, aw: 700},
-    'kinetic-impact': {display: 'Anton', meta: 'JetBrains Mono', accent: 'Caveat', dw: 400, mw: 500, aw: 700},
-    technical: {display: 'SpaceGrotesk', meta: 'IBMPlexMono', accent: 'Kalam', dw: 700, mw: 500, aw: 700},
-    handwritten: {display: 'Caveat', meta: 'Nunito', accent: 'IndieFlower', dw: 700, mw: 600, aw: 400},
-  };
-
-  // The file names shipped in assets/fonts/. A preset whose face is not here
-  // falls back to the nearest bundled family; `check` does not catch that, so
-  // keep this list in step with the folder.
-  var FILES = {
-    Fredoka: 'Fredoka.ttf',
-    Baloo2: 'Baloo2.ttf',
-    Shrikhand: 'Shrikhand.ttf',
-    Caveat: 'Caveat.ttf',
-    PatrickHand: 'PatrickHand.ttf',
-  };
-
-  // Families HyperFrames bundles by name — no @font-face needed.
-  var BUNDLED = {
-    Inter: 1, Montserrat: 1, Outfit: 1, Nunito: 1, Oswald: 1, 'League Gothic': 1,
-    'Archivo Black': 1, 'Space Mono': 1, 'IBM Plex Mono': 1, 'JetBrains Mono': 1,
-    'EB Garamond': 1, 'Playfair Display': 1, 'Source Code Pro': 1, 'Noto Sans JP': 1,
-    Roboto: 1, 'Open Sans': 1, Lato: 1, Poppins: 1,
+    'playful-rounded': {display: 'Fredoka', dw: 600, meta: 'JetBrains Mono', mw: 500, accent: 'Caveat', aw: 700},
+    'playful-bold': {display: 'Baloo 2', dw: 700, meta: 'Nunito', mw: 700, accent: 'Patrick Hand', aw: 400},
+    'poster-display': {display: 'Shrikhand', dw: 400, meta: 'Poppins', mw: 600, accent: 'Caveat', aw: 700},
+    editorial: {display: 'Fraunces', dw: 700, meta: 'JetBrains Mono', mw: 500, accent: 'Caveat', aw: 700},
+    archival: {display: 'Libre Caslon Text', dw: 700, meta: 'Space Mono', mw: 700, accent: 'Kalam', aw: 700},
+    'kinetic-impact': {display: 'Anton', dw: 400, meta: 'JetBrains Mono', mw: 500, accent: 'Caveat', aw: 700},
+    technical: {display: 'Space Grotesk', dw: 700, meta: 'IBM Plex Mono', mw: 500, accent: 'Kalam', aw: 700},
+    handwritten: {display: 'Caveat', dw: 700, meta: 'Nunito', mw: 600, accent: 'Indie Flower', aw: 400},
   };
 
   var key = window.BITS_TYPE_PRESET || '';
   var preset = PRESETS[key];
 
   if (!preset) {
-    // Leave the CSS defaults in place; qc/type_gate.py is the thing that fails.
-    console.warn('[type] BITS_TYPE_PRESET is not set; using the CSS defaults. Run qc/type_gate.py.');
-    return;
+    throw new Error(
+      '[type] window.BITS_TYPE_PRESET is ' +
+        (key ? '"' + key + '" (not a preset)' : 'not set') +
+        '. Pick the topic\'s register in stage 4: ' +
+        Object.keys(PRESETS).join(', ')
+    );
   }
 
   var root = document.documentElement;
-  root.style.setProperty('--font-display', "'" + preset.display + "', sans-serif");
-  root.style.setProperty('--font-meta', "'" + preset.meta + "', monospace");
-  root.style.setProperty('--font-accent', "'" + preset.accent + "', cursive");
+  var set = function (name, value) {
+    root.style.setProperty(name, value);
+  };
 
-  var families = [preset.display, preset.meta, preset.accent];
-  var faces = '';
-  families.forEach(function (fam) {
-    if (BUNDLED[fam] || !FILES[fam]) return; // bundled, or shipped nowhere
-    faces +=
-      "@font-face{font-family:'" + fam + "';src:url('assets/fonts/" + FILES[fam] +
-      "') format('truetype');font-display:block}\n";
-  });
-  if (faces) {
-    var style = document.createElement('style');
-    style.textContent = faces;
-    document.head.appendChild(style);
-  }
+  set('--font-display', "'" + preset.display + "', sans-serif");
+  set('--font-meta', "'" + preset.meta + "', monospace");
+  set('--font-accent', "'" + preset.accent + "', cursive");
+  set('--font-display-weight', String(preset.dw));
+  set('--font-meta-weight', String(preset.mw));
+  set('--font-accent-weight', String(preset.aw));
 })();

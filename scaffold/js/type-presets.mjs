@@ -6,9 +6,15 @@
  * from it used that pairing no matter the topic. A list of options does not
  * change behaviour; a required choice with a failing gate does.
  *
- * The HTML reads it through `js/type-preset.js`, which writes the three CSS
- * variables and the @font-face block. `qc/type_gate.py` fails until the key is
- * set, and fails again if the same folder already used it.
+ * Two readers: `qc/type_gate.py`, which also cross-checks this table against the
+ * copy in `js/apply-type-preset.js`, and that copy itself, which sets the CSS
+ * variables before the timeline is built. `qc/type_gate.py` fails on an unset
+ * key and on the same folder repeating its register.
+ *
+ * Every family name here is the name the font declares, not the file name:
+ * 'Baloo 2', not 'Baloo2'; 'Space Grotesk', not 'SpaceGrotesk'. A mismatch loads
+ * the file under a name no CSS rule asks for and the film renders in a fallback
+ * with no error anywhere.
  */
 
 /**
@@ -28,11 +34,11 @@ export const PRESETS = {
     when: 'a light or friendly topic: food, habits, kids, everyday science',
   },
   'playful-bold': {
-    display: 'Baloo2',
+    display: 'Baloo 2',
     displayWeight: 700,
     meta: 'Nunito',
     metaWeight: 700,
-    accent: 'PatrickHand',
+    accent: 'Patrick Hand',
     accentWeight: 400,
     when: 'an energetic topic that still wants warmth: fitness, productivity, how-to',
   },
@@ -55,9 +61,9 @@ export const PRESETS = {
     when: 'an essay, history or analysis: the voice is written, not spoken',
   },
   archival: {
-    display: 'LibreCaslonText',
+    display: 'Libre Caslon Text',
     displayWeight: 700,
-    meta: 'SpaceMono',
+    meta: 'Space Mono',
     metaWeight: 700,
     accent: 'Kalam',
     accentWeight: 700,
@@ -73,9 +79,9 @@ export const PRESETS = {
     when: 'a statistic, a record, a hook — the number is the argument',
   },
   technical: {
-    display: 'SpaceGrotesk',
+    display: 'Space Grotesk',
     displayWeight: 700,
-    meta: 'IBMPlexMono',
+    meta: 'IBM Plex Mono',
     metaWeight: 500,
     accent: 'Kalam',
     accentWeight: 700,
@@ -86,7 +92,7 @@ export const PRESETS = {
     displayWeight: 700,
     meta: 'Nunito',
     metaWeight: 600,
-    accent: 'IndieFlower',
+    accent: 'Indie Flower',
     accentWeight: 400,
     when: 'a first-person or reflective piece where the voice is a person, not a brand',
   },

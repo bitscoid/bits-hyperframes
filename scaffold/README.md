@@ -7,6 +7,7 @@ cp -r <skill>/scaffold/. ./tiga-mitos-otak/
 cd tiga-mitos-otak
 mkdir -p assets audio renders work   # only what you will fill
 npx hyperframes browser ensure   # once per machine, 685 MB
+python3 qc/type_gate.py          # fails until a type register is set
 npx hyperframes check            # must pass before any render
 npx hyperframes render --output work/render-raw.mp4 --workers=4
 ```
@@ -17,8 +18,11 @@ What each file is:
 |---|---|
 | `index.html` | the composition: markup, CSS custom properties, the GSAP timeline |
 | `compositions/` | optional sub-compositions, one scene each |
+| `js/type-presets.mjs` | the eight registers; the chosen key lives in `index.html` |
+| `js/apply-type-preset.js` | reads `window.BITS_TYPE_PRESET`, sets the font variables |
 | `qc/make_sync_probe.py` | samples the composition, writes `work/sync-probe.json` |
 | `qc/sync_gate.py` | compares the probe against the word times, exits 1 on a finding |
+| `qc/type_gate.py` | fails until a register is chosen, resolvable, and consistent |
 | `qc/sync-cases.json` | `{text, t_vo}` pairs the gate checks, in voiceover seconds |
 
 `qc/sync-cases.json` is the **only** source of sync cases here — this engine has no
@@ -31,6 +35,17 @@ nothing proves it lands after its word.
 
 `t_vo` is seconds into the voiceover; the probe adds `vo_delay` and samples at -0.15 s and
 +0.10 s around it.
+
+## The type register
+
+`index.html` sets `window.BITS_TYPE_PRESET` in its `<head>`, above `js/apply-type-preset.js`,
+which reads it and writes `--font-display`, `--font-meta`, `--font-accent` and their weights.
+It ships empty: the apply script throws on an empty key, and `qc/type_gate.py` reports the same
+thing earlier with the list of valid keys. Set it once per film from the topic's register.
+
+Every family the presets name is declared statically with `@font-face` in `index.html`, under
+the name the font declares — `Baloo 2`, not `Baloo2`. `check` lints that file and not the DOM,
+which is why the declarations are there and not in the script.
 
 ## The three rules this scaffold follows
 

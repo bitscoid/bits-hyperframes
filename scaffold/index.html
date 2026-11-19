@@ -8,9 +8,17 @@
          machine would otherwise produce a dead composition.
          Get it once: cp node_modules/gsap/dist/gsap.min.js assets/vendor/ -->
     <script src="assets/vendor/gsap.min.js"></script>
-    <!-- Applies the type preset chosen in stage 4: sets --font-display,
-         --font-meta, --font-accent and declares any @font-face the preset
-         needs. Set BITS_TYPE_PRESET in the script below. -->
+    <!-- The register, chosen from the topic in stage 4. Empty on purpose:
+         qc/type_gate.py fails until it is set, and js/apply-type-preset.js
+         throws on an empty key so a render cannot quietly fall back to the CSS
+         defaults. This block MUST stay above the script below: loaded first, it
+         read an undefined key and every film shipped the same pairing. -->
+    <script>
+      window.BITS_TYPE_PRESET = 'handwritten';
+    </script>
+    <!-- Reads the key above and sets --font-display/-meta/-accent and their
+         weights. Declares no @font-face: `hyperframes check` lints this file,
+         not the DOM. -->
     <script src="js/apply-type-preset.js"></script>
     <style>
       :root {
@@ -20,44 +28,49 @@
         --accent: #c63b2b;
 
         /*
-         * Font roles. These are FALLBACKS — js/apply-type-preset.js overwrites
-         * them from the preset chosen in stage 4.
-         *
-         * HyperFrames bundles only 18 families by name, and none of them is
-         * handwriting, doodle or rounded display. The playful faces therefore
-         * ship in assets/fonts/ and get declared by the same script.
-         *
-         * Do not hardcode a family here: a default in the file is the cheapest
-         * path, and the cheapest path is what made every film look identical.
+         * Font roles. Set at runtime by js/apply-type-preset.js from the preset,
+         * which is why no family is hardcoded here: a default in the file is the
+         * cheapest path, and the cheapest path is what made every film look
+         * identical. The `inherit` values only keep the custom properties valid
+         * if the script throws before setting them — the render stops there.
          */
-        --font-display: 'Fredoka', sans-serif;          /* overwritten by the preset */
-        --font-meta: 'JetBrains Mono', monospace;       /* labels, indices */
-        --font-accent: 'Caveat', cursive;               /* the annotation hand */
+        --font-display: inherit;
+        --font-meta: inherit;
+        --font-accent: inherit;
+        --font-display-weight: 400;
+        --font-meta-weight: 400;
+        --font-accent-weight: 400;
       }
 
       /*
-       * Every family any preset can name must be declared HERE, statically:
-       * `hyperframes check` lints the file, not the DOM, so a face added by
+       * Every family a preset can name must be declared HERE, statically:
+       * `hyperframes check` lints this file, not the DOM, so a face added by
        * script is invisible to it and fails `font_family_without_font_face`.
        *
+       * `font-family` is the name the font itself declares, not the file name.
+       * Measured trap: declaring 'Baloo2' or 'SpaceGrotesk' loads the file under
+       * a name no CSS rule asks for, so the preset renders in the fallback with
+       * no error anywhere.
+       *
+       * Variable files carry a weight range; a static file carries one weight,
+       * because claiming a range on a static face makes the browser fake-bold it.
+       *
        * The families HyperFrames bundles (Inter, Poppins, Nunito, JetBrains
-       * Mono, Space Mono, IBM Plex Mono, Montserrat, …) need no rule. The ones
-       * below are shipped in assets/fonts/ because the bundle has no playful or
-       * handwriting register.
+       * Mono, Space Mono, IBM Plex Mono, Montserrat, …) need no rule.
        *
        * Delete a font file this film does not use, and its rule with it.
        */
-      @font-face { font-family: 'Fredoka';         src: url('assets/fonts/Fredoka.ttf')      format('truetype'); font-display: block; }
-      @font-face { font-family: 'Baloo2';          src: url('assets/fonts/Baloo2.ttf')       format('truetype'); font-display: block; }
-      @font-face { font-family: 'Shrikhand';       src: url('assets/fonts/Shrikhand.ttf')    format('truetype'); font-display: block; }
-      @font-face { font-family: 'Caveat';          src: url('assets/fonts/Caveat.ttf')       format('truetype'); font-display: block; }
-      @font-face { font-family: 'PatrickHand';     src: url('assets/fonts/PatrickHand.ttf')  format('truetype'); font-display: block; }
-      @font-face { font-family: 'Fraunces';        src: url('assets/fonts/Fraunces.ttf')     format('truetype'); font-display: block; }
-      @font-face { font-family: 'LibreCaslonText'; src: url('assets/fonts/LibreCaslonText.ttf') format('truetype'); font-display: block; }
-      @font-face { font-family: 'Anton';           src: url('assets/fonts/Anton.ttf')        format('truetype'); font-display: block; }
-      @font-face { font-family: 'SpaceGrotesk';    src: url('assets/fonts/SpaceGrotesk.ttf') format('truetype'); font-display: block; }
-      @font-face { font-family: 'Kalam';           src: url('assets/fonts/Kalam-Bold.ttf')   format('truetype'); font-display: block; }
-      @font-face { font-family: 'IndieFlower';     src: url('assets/fonts/IndieFlower.ttf')  format('truetype'); font-display: block; }
+      @font-face { font-family: 'Fredoka';           src: url('assets/fonts/Fredoka.ttf')         format('truetype'); font-weight: 300 700; font-display: block; }
+      @font-face { font-family: 'Baloo 2';           src: url('assets/fonts/Baloo2.ttf')          format('truetype'); font-weight: 400 800; font-display: block; }
+      @font-face { font-family: 'Shrikhand';         src: url('assets/fonts/Shrikhand.ttf')       format('truetype'); font-weight: 400;     font-display: block; }
+      @font-face { font-family: 'Caveat';            src: url('assets/fonts/Caveat.ttf')          format('truetype'); font-weight: 400 700; font-display: block; }
+      @font-face { font-family: 'Patrick Hand';      src: url('assets/fonts/PatrickHand.ttf')     format('truetype'); font-weight: 400;     font-display: block; }
+      @font-face { font-family: 'Fraunces';          src: url('assets/fonts/Fraunces.ttf')        format('truetype'); font-weight: 100 900; font-display: block; }
+      @font-face { font-family: 'Libre Caslon Text'; src: url('assets/fonts/LibreCaslonText.ttf') format('truetype'); font-weight: 400 700; font-display: block; }
+      @font-face { font-family: 'Anton';             src: url('assets/fonts/Anton.ttf')           format('truetype'); font-weight: 400;     font-display: block; }
+      @font-face { font-family: 'Space Grotesk';     src: url('assets/fonts/SpaceGrotesk.ttf')    format('truetype'); font-weight: 300 700; font-display: block; }
+      @font-face { font-family: 'Kalam';             src: url('assets/fonts/Kalam-Bold.ttf')      format('truetype'); font-weight: 700;     font-display: block; }
+      @font-face { font-family: 'Indie Flower';      src: url('assets/fonts/IndieFlower.ttf')     format('truetype'); font-weight: 400;     font-display: block; }
 
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body {
@@ -80,6 +93,7 @@
       .meta {
         left: 128px; top: 300px;
         font-family: var(--font-meta);
+        font-weight: var(--font-meta-weight);
         font-size: 28px; letter-spacing: 6px; text-transform: uppercase;
       }
 
@@ -93,7 +107,7 @@
         border-radius: 16px;
         background: var(--accent);
         color: #14060a;
-        font-weight: 600; font-size: 104px; line-height: 1.05;
+        font-weight: var(--font-display-weight); font-size: 104px; line-height: 1.05;
         letter-spacing: -1px;
         display: flex; align-items: center;
         padding: 24px 32px;
@@ -107,6 +121,7 @@
        */
       .hand {
         font-family: var(--font-accent);
+        font-weight: var(--font-accent-weight);
         font-size: 64px;
         line-height: 1;
         color: var(--accent);
@@ -116,7 +131,9 @@
 
       .title {
         left: 128px; top: 560px;
-        font-size: 72px; line-height: 1.08; font-weight: 900;
+        font-family: var(--font-display);
+        font-weight: var(--font-display-weight);
+        font-size: 72px; line-height: 1.08;
       }
 
       /* A shape that moves for the whole film. Measured reason: the card only
@@ -186,9 +203,6 @@
        * error at all — the element sat at the same x in every frame until this
        * was changed to `window.__timelines[id] = gsap.timeline()`.
        */
-      // Chosen from the topic in stage 4. qc/type_gate.py fails while this is empty.
-      window.BITS_TYPE_PRESET = 'playful-rounded';
-
       window.__timelines = window.__timelines || {};
       const tl = gsap.timeline({ paused: true });
 

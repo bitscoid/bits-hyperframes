@@ -102,9 +102,13 @@ tiga-mitos-otak/
 ├── script.txt              voiceover script, clean text, no labels
 ├── index.html              the whole visual design: markup, CSS, timeline
 ├── compositions/           optional sub-compositions, one scene each
+├── js/
+│   ├── type-presets.mjs    the eight registers and the reason for each
+│   └── apply-type-preset.js  reads BITS_TYPE_PRESET, sets the font variables
 ├── qc/
 │   ├── make_sync_probe.py  samples the composition
 │   ├── sync_gate.py        compares against the word times
+│   ├── type_gate.py        fails until a register is chosen and resolvable
 │   └── sync-cases.json     the texts the gate proves
 ├── audio/
 │   └── words.json          word-level timing; DURABLE, never deleted
@@ -369,7 +373,7 @@ Pilihannya:
    sendiri: latar [warna], aksen [warna], tipografi [jenis], gerak [sifat].
    Kalau Anda punya contoh tampilan yang lebih Anda suka, kirim saja.
    ```
-5. **Pick a type preset from the topic, then set it — the build fails until you do.** `js/type-presets.mjs` holds eight registers (`playful-rounded`, `playful-bold`, `poster-display`, `editorial`, `archival`, `kinetic-impact`, `technical`, `handwritten`), each a display + meta + accent family with the reason it suits a topic. Read the reference's type register, choose the preset that fits the topic, and set `window.BITS_TYPE_PRESET` in `index.html`. `python3 qc/type_gate.py` fails on an empty key, on one family carrying all three roles, and on repeating the previous film's preset in the same folder (`BITS_REUSE_TYPE=1` overrides a deliberate repeat). Do not keep a default: the default is what made every film look the same. If no preset fits, add one plus its family files and `@font-face` rules. Read the reference's type register first, then match a family to the topic's character. State the choice and reasoning in one sentence. If that font is not in the catalogue and not installed, search the internet for one that fits, download it, and verify it before writing scene code — recipe in `references/RENDER.md` §1. Never start building with a font that merely exists and then bend the design toward it; that order produces generic work.
+5. **Pick a type preset from the topic, then set it — the build fails until you do.** `js/type-presets.mjs` holds eight registers (`playful-rounded`, `playful-bold`, `poster-display`, `editorial`, `archival`, `kinetic-impact`, `technical`, `handwritten`), each a display + meta + accent family with the reason it suits a topic. Read the reference's type register, choose the preset that fits the topic, and set `window.BITS_TYPE_PRESET` in the `<head>` of `index.html`, above the script that reads it. Every family name in the table is the name the font declares (`Baloo 2`, not `Baloo2`); a file or module name loads the font and then renders the fallback in silence. `python3 qc/type_gate.py` fails on an empty key, on one family carrying all three roles, on a family that is neither bundled nor declared by an `@font-face`, and on the two preset tables drifting apart; a repeat in the same folder is only a note, because a rerun is the normal case. Do not keep a default: the default is what made every film look the same. If no preset fits, add one plus its family files, its `@font-face` rule and its entry in `js/apply-type-preset.js`. Read the reference's type register first, then match a family to the topic's character. State the choice and reasoning in one sentence. If that font is not in the catalogue and not installed, search the internet for one that fits, download it, and verify it before writing scene code — recipe in `references/RENDER.md` §1. Never start building with a font that merely exists and then bend the design toward it; that order produces generic work.
 
    ```
    Tipografi: [nama keluarga huruf] untuk [peran], karena [alasan singkat

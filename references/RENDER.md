@@ -98,14 +98,24 @@ display + meta + accent triple with the reason it suits a topic:
 | `technical` | Space Grotesk | IBM Plex Mono | Kalam | systems, code, data |
 | `handwritten` | Caveat | Nunito | Indie Flower | first-person, reflective |
 
-Set `window.BITS_TYPE_PRESET` in `index.html`. `python3 qc/type_gate.py` fails on an empty key,
-on one family carrying all three roles, and on repeating the previous film's preset in the same
-folder.
+Set `window.BITS_TYPE_PRESET` in the `<head>` of `index.html`, above the script tag that reads
+it. `python3 qc/type_gate.py` fails on an empty key, on one family carrying all three roles, on a
+family that is neither bundled nor declared by an `@font-face`, and on the table disagreeing with
+the copy in `js/apply-type-preset.js`; repeating the previous run's preset is only a note.
 
-`js/apply-type-preset.js` reads the key and writes the three CSS variables. Measured trap:
-injecting the `@font-face` rules from that script fails `font_family_without_font_face` —
-`check` lints the static file, not the DOM — so every preset's families are declared in
-`index.html` and the script only sets the variables.
+Two measured traps, both silent before they were fixed:
+
+- **Order.** The apply script was loaded before the inline assignment, read `undefined`, took the
+  "fall back to the CSS defaults" path and returned. Every film rendered the same pairing while
+  the gate — which reads the text of the file, not the live DOM — reported OK. The key is now
+  assigned in its own `<script>` above it, and the script throws instead of falling back.
+- **The name.** A family is matched by the name the font declares, not the file or module name:
+  `Baloo 2`, not `Baloo2`; `Space Grotesk`, not `SpaceGrotesk`. Declaring the file under the
+  wrong name loads it and then renders the fallback with no error anywhere.
+
+`js/apply-type-preset.js` reads the key and writes `--font-{display,meta,accent}` and their
+weights. It declares no `@font-face`: injecting the rules from script fails
+`font_family_without_font_face`, because `check` lints the static file, not the DOM.
 
 The bundle has Latin at a few weights per family. Other weights and scripts are fetched from
 Google Fonts and cached in `~/.cache/hyperframes/fonts`.
