@@ -1,0 +1,10 @@
+node_modules/
+renders/
+work/
+.hyperframes/
+assets/voiceover.wav
+assets/music.wav
+audio/
+*.mp4
+*.srt
+.DS_Store

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        /* Replace all three with the film's own palette. */
+        --ground: #0b0b0f;
+        --ink: #f5f1ea;
+        --accent: #c63b2b;
+        --font-display: Inter, sans-serif;
+        --font-meta: 'JetBrains Mono', monospace;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1080px; height: 1920px; overflow: hidden;
+        background: var(--ground); color: var(--ink);
+        font-family: var(--font-display);
+      }
+      #root { position: relative; width: 1080px; height: 1920px; }
+
+      /* Safe box: x 120..780, y 240..1260 on 1080x1920.
+         Derived from @hyperframes/core/dist/safeAreas.js — its TikTok band is
+         declared at 720x1280 as [top,bottom,left,right] = [160,560,80,640] and
+         [560,840,80,520]; scaled to 1080x1920 that is x 120..780, y 240..1260.
+         Measured: L110 flagged / L130 clean, T240 flagged / T300 clean,
+         B1240 flagged / B1200 clean, R780 flagged. It is the strictest of the
+         three platforms, so fitting it fits Reels and Shorts too. */
+
+      .clip { position: absolute; }
+
+      .meta {
+        left: 128px; top: 300px;
+        font-family: var(--font-meta);
+        font-size: 28px; letter-spacing: 6px; text-transform: uppercase;
+      }
+
+      /* The card IS the word: one element, so the contrast gate measures the
+         accent fill it actually renders on. Measured trap: with the accent block
+         as a separate sibling behind the text, the gate read the page background
+         and reported 1.01:1 for text that is plainly legible. */
+      .card {
+        left: 140px; top: 880px;
+        width: 620px; min-height: 250px;
+        border-radius: 16px;
+        background: var(--accent);
+        color: #14060a;
+        font-weight: 900; font-size: 104px; line-height: 1.05;
+        letter-spacing: -2px;
+        display: flex; align-items: center;
+        padding: 24px 32px;
+      }
+
+      .title {
+        left: 128px; top: 560px;
+        font-size: 72px; line-height: 1.08; font-weight: 900;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="10.5"
+      data-width="1080"
+      data-height="1920"
+    >
+      <!-- Lead-in: the title card, while nothing is narrated. -->
+      <div id="title" class="clip title" data-start="0" data-duration="1.7" data-track-index="0">
+        Kenapa kopi<br />bikin ngantuk?
+      </div>
+
+      <!-- Beat 1 — the word lands at 1.55 s. -->
+      <div id="b1card" class="clip card" data-start="1.0" data-duration="3.2" data-track-index="1">ngantuk</div>
+      <div id="b1meta" class="clip meta" data-start="1.0" data-duration="3.2" data-track-index="2">hook</div>
+
+      <!-- Beat 2 — word at 4.72 s. -->
+      <div id="b2card" class="clip card" data-start="4.2" data-duration="2.8" data-track-index="1">adenosin</div>
+      <div id="b2meta" class="clip meta" data-start="4.2" data-duration="2.8" data-track-index="2">b1</div>
+
+      <!-- Beat 3 — word at 7.46 s; the closing line holds ≥2 s. -->
+      <div id="b3card" class="clip card" data-start="7.0" data-duration="2.6" data-track-index="1">6 jam</div>
+      <div id="b3meta" class="clip meta" data-start="7.0" data-duration="2.6" data-track-index="2">close</div>
+
+      <!-- Narration. assets/ is read by relative path. -->
+      <audio id="vo" data-start="0" data-duration="8" data-track-index="10" src="assets/voiceover.wav"></audio>
+    </div>
+
+    <script>
+      /*
+       * The render contract. Every clip is positioned by ONE paused timeline,
+       * registered under the root's data-composition-id.
+       *
+       * Measured trap: `window.__hf = {seek(t)}` produces a STATIC video with no
+       * error at all — the element sat at the same x in every frame until this
+       * was changed to `window.__timelines[id] = gsap.timeline()`.
+       */
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      const beats = [
+        { id: 'b1', start: 1.0, wordAt: 1.55, duration: 3.2 },
+        { id: 'b2', start: 4.2, wordAt: 4.72, duration: 2.8 },
+        { id: 'b3', start: 7.0, wordAt: 7.46, duration: 2.6 },
+      ];
+
+      beats.forEach((b) => {
+        const reveal = b.wordAt - 0.08;
+        tl.set('#' + b.id + 'card', { opacity: 0 }, 0);
+        tl.fromTo(
+          '#' + b.id + 'card',
+          { opacity: 0, scale: 0.94, transformOrigin: 'left center' },
+          { opacity: 1, scale: 1, duration: 0.3, ease: 'power3.out' },
+          reveal
+        );
+        // Continuous drift for the WHOLE beat: a drift that stops early leaves
+        // identical frames and the encoder reports a freeze.
+        tl.fromTo(
+          '#' + b.id + 'card',
+          { x: 0, y: 0 },
+          { x: 40, y: -16, duration: b.duration, ease: 'sine.inOut' },
+          b.start
+        );
+      });
+
+      tl.to('#title', { opacity: 0, duration: 0.35, ease: 'power2.in' }, 1.6);
+
+      window.__timelines['main'] = tl;
+    </script>
+  </body>
+</html>

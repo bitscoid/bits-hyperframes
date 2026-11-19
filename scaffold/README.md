@@ -1,0 +1,55 @@
+# Scaffold
+
+Copied into a new project folder, then edited in place.
+
+```bash
+cp -r <skill>/scaffold/. ./tiga-mitos-otak/
+cd tiga-mitos-otak
+mkdir -p assets audio renders work
+npx hyperframes browser ensure   # once per machine, 685 MB
+npx hyperframes check            # must pass before any render
+npx hyperframes render --output work/render-raw.mp4 --workers=4
+```
+
+What each file is:
+
+| File | Role |
+|---|---|
+| `index.html` | the composition: markup, CSS custom properties, the GSAP timeline |
+| `compositions/` | optional sub-compositions, one scene each |
+| `qc/sync-cases.json` | `{text, t_vo}` pairs the sync gate checks |
+
+## The three rules this scaffold follows
+
+1. **One paused timeline, registered.** `window.__timelines['main'] = gsap.timeline({paused: true})`.
+   `window.__hf = {seek(t)}` renders a **static video with no error** — measured: the test
+   element sat at x=319 px in every frame.
+
+2. **The safe band is the TikTok band.** On 1080×1920 that is x 120..780, y 240..1260,
+   derived from `@hyperframes/core/dist/safeAreas.js`. Measured: left 110 flagged, left 130
+   clean; top 240 flagged, top 300 clean; bottom 1240 flagged, bottom 1200 clean.
+   It is the strictest of the three platforms, so fitting it fits Reels and Shorts.
+
+3. **One element per word, not a block behind it.** A word over an accent card is a single
+   element with `background`, `color` and `padding`. Measured: with the card as a sibling,
+   the contrast gate read the page background and reported 1.01:1 for legible text.
+
+Two more, from the render:
+
+- **Drift must last the whole beat.** A drift that stops after 1 s leaves identical frames;
+  the encoder reports a freeze and the contact sheet shows duplicates.
+- **`data-duration` comes from the script, not the cap.** A 9 s script in a 60 s composition
+  is 87% dead.
+
+## Before the first render
+
+Replace, in this order:
+
+1. `:root` custom properties — the palette, the two font families.
+2. `data-duration` on the root — from `audio/words.json`, last word + lead-in + 1.5 s tail.
+3. The beats in the `<script>` — `start`, `wordAt`, `duration` per beat.
+4. The card text and the meta labels.
+5. `<audio src="assets/voiceover.wav">` — the narration you actually have.
+
+Then `npx hyperframes check`. It reports every out-of-band text with its exact bbox and the
+platform that flagged it.
