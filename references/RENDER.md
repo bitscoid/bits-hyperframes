@@ -56,9 +56,33 @@ refusal, or `[image omitted: ...]`.
 
 ### Fonts
 
-HyperFrames bundles 18 families **by name**: Inter, Montserrat, Outfit, Nunito, Oswald,
-League Gothic, Archivo Black, Space Mono, IBM Plex Mono, JetBrains Mono, EB Garamond,
-Playfair Display, Source Code Pro, Noto Sans JP, Roboto, Open Sans, Lato, Poppins.
+**A film has three type roles, and they should not all share a family.** The pairing is
+the design; one family for all three is what makes a video read as a template.
+
+| Role | Carries | Typical register | CSS variable |
+|---|---|---|---|
+| **display** | the keyword, the number, the verdict | impact, or rounded for a light topic | `--font-display` |
+| **meta** | labels, indices, chips, footnotes | mono, or small-caps serif | `--font-meta` |
+| **accent** | an annotation, a scribble | handwriting, sparingly, never body | `--font-accent` |
+
+**The bundled families cover only the first two registers.** HyperFrames bundles 18
+families **by name**: Inter, Montserrat, Outfit, Nunito, Oswald, League Gothic, Archivo
+Black, Space Mono, IBM Plex Mono, JetBrains Mono, EB Garamond, Playfair Display, Source Code
+Pro, Noto Sans JP, Roboto, Open Sans, Lato, Poppins.
+
+None of them is handwriting, doodle or rounded *display*. That is not a gap in the tool — it
+means the playful registers must be shipped in `assets/fonts/` and declared. The scaffold
+does this already, with five families ready to swap in:
+
+| Family | Register | Use for |
+|---|---|---|
+| `Fredoka` | rounded, friendly, geometric | display for a light or playful topic |
+| `Baloo 2` | rounded, heavier, warmer | display when Fredoka is too soft |
+| `Shrikhand` | heavy display, high personality | a title, once per film |
+| `Caveat` | handwriting, natural | the accent role — annotations |
+| `Patrick Hand` | handwriting, blockier | the accent role when Caveat is too cursive |
+
+Delete the ones a film does not use; each is 100–680 KB and they are shipped per project.
 
 The bundle has Latin at a few weights per family. Other weights and scripts are fetched from
 Google Fonts and cached in `~/.cache/hyperframes/fonts`.

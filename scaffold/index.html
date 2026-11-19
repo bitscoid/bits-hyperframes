@@ -14,9 +14,33 @@
         --ground: #0b0b0f;
         --ink: #f5f1ea;
         --accent: #c63b2b;
-        --font-display: Inter, sans-serif;
-        --font-meta: 'JetBrains Mono', monospace;
+
+        /*
+         * Font roles. Pick by the topic's register, not by what is installed —
+         * the catalogue in references/RENDER.md §1 lists the choices.
+         *
+         * HyperFrames bundles only 18 families by name, and NONE of them is
+         * handwriting, doodle or rounded: Inter, Montserrat, Outfit, Nunito,
+         * Oswald, League Gothic, Archivo Black, Space Mono, IBM Plex Mono,
+         * JetBrains Mono, EB Garamond, Playfair Display, Source Code Pro,
+         * Noto Sans JP, Roboto, Open Sans, Lato, Poppins.
+         *
+         * So the playful fonts below are shipped in assets/fonts/ and declared
+         * with @font-face. A family that renders but is not declared fails lint
+         * `font_family_without_font_face`.
+         */
+        --font-display: 'Fredoka', sans-serif;          /* heavy, rounded, friendly */
+        --font-meta: 'JetBrains Mono', monospace;       /* labels, indices */
+        --font-accent: 'Caveat', cursive;               /* the annotation hand */
       }
+
+      /* Shipped in assets/fonts/. Delete the ones this film does not use. */
+      @font-face { font-family: 'Caveat';      src: url('assets/fonts/Caveat.ttf')      format('truetype'); font-display: block; }
+      @font-face { font-family: 'PatrickHand'; src: url('assets/fonts/PatrickHand.ttf') format('truetype'); font-display: block; }
+      @font-face { font-family: 'Fredoka';     src: url('assets/fonts/Fredoka.ttf')     format('truetype'); font-display: block; }
+      @font-face { font-family: 'Baloo2';      src: url('assets/fonts/Baloo2.ttf')      format('truetype'); font-display: block; }
+      @font-face { font-family: 'Shrikhand';   src: url('assets/fonts/Shrikhand.ttf')   format('truetype'); font-display: block; }
+
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body {
         width: 1080px; height: 1920px; overflow: hidden;
@@ -51,10 +75,25 @@
         border-radius: 16px;
         background: var(--accent);
         color: #14060a;
-        font-weight: 900; font-size: 104px; line-height: 1.05;
-        letter-spacing: -2px;
+        font-weight: 600; font-size: 104px; line-height: 1.05;
+        letter-spacing: -1px;
         display: flex; align-items: center;
         padding: 24px 32px;
+      }
+
+      /*
+       * The accent layer: a handwritten annotation that sits beside the display
+       * word. Three registers in one frame is what stops the film reading as a
+       * single-font template — display (rounded), meta (mono), accent (hand).
+       * Rotated a few degrees, because a hand does not write perfectly level.
+       */
+      .hand {
+        font-family: var(--font-accent);
+        font-size: 64px;
+        line-height: 1;
+        color: var(--accent);
+        transform: rotate(-4deg);
+        transform-origin: left center;
       }
 
       .title {
@@ -102,14 +141,17 @@
       <!-- Beat 1 — the word lands at 1.55 s. -->
       <div id="b1card" class="clip card" data-start="1.0" data-duration="3.2" data-track-index="1">ngantuk</div>
       <div id="b1meta" class="clip meta" data-start="1.0" data-duration="3.2" data-track-index="2">hook</div>
+      <div id="b1hand" class="clip hand" data-start="1.0" data-duration="3.2" data-track-index="3" style="left: 160px; top: 1150px">sebenarnya</div>
 
       <!-- Beat 2 — word at 4.72 s. -->
       <div id="b2card" class="clip card" data-start="4.2" data-duration="2.8" data-track-index="1">adenosin</div>
       <div id="b2meta" class="clip meta" data-start="4.2" data-duration="2.8" data-track-index="2">b1</div>
+      <div id="b2hand" class="clip hand" data-start="4.2" data-duration="2.8" data-track-index="3" style="left: 160px; top: 1150px">bukan itu</div>
 
       <!-- Beat 3 — word at 7.46 s; the closing line holds ≥2 s. -->
       <div id="b3card" class="clip card" data-start="7.0" data-duration="2.6" data-track-index="1">6 jam</div>
       <div id="b3meta" class="clip meta" data-start="7.0" data-duration="2.6" data-track-index="2">close</div>
+      <div id="b3hand" class="clip hand" data-start="7.0" data-duration="2.6" data-track-index="3" style="left: 160px; top: 1150px">ini yang penting</div>
 
       <!-- Narration. assets/ is read by relative path. -->
       <div id="rule" class="clip rule" data-start="0" data-duration="9.6" data-track-index="9"></div>
@@ -147,6 +189,14 @@
           { opacity: 0, scale: 0.94, transformOrigin: 'left center' },
           { opacity: 1, scale: 1, duration: 0.3, ease: 'power3.out' },
           reveal
+        );
+        // the annotation writes in just after the card lands
+        tl.set('#' + b.id + 'hand', { opacity: 0 }, 0);
+        tl.fromTo(
+          '#' + b.id + 'hand',
+          { opacity: 0, y: 10 },
+          { opacity: 1, y: 0, duration: 0.25, ease: 'power2.out' },
+          reveal + 0.18
         );
         // Continuous drift for the WHOLE beat: a drift that stops early leaves
         // identical frames and the encoder reports a freeze.
