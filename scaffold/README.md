@@ -21,6 +21,17 @@ What each file is:
 | `qc/sync_gate.py` | compares the probe against the word times, exits 1 on a finding |
 | `qc/sync-cases.json` | `{text, t_vo}` pairs the gate checks, in voiceover seconds |
 
+`qc/sync-cases.json` is the **only** source of sync cases here — this engine has no
+`cue.ts`, so the gate cannot derive them. Every keyword the film shows needs an entry, or
+nothing proves it lands after its word.
+
+```json
+[{"text": "ngantuk", "t_vo": 0.55}, {"text": "6 jam", "t_vo": 6.46}]
+```
+
+`t_vo` is seconds into the voiceover; the probe adds `vo_delay` and samples at -0.15 s and
++0.10 s around it.
+
 ## The three rules this scaffold follows
 
 1. **One paused timeline, registered.** `window.__timelines['main'] = gsap.timeline({paused: true})`.
