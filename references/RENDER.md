@@ -2,7 +2,7 @@
 
 Read this before building and rendering. All commands are examples — adapt filenames to the assets you actually have. Never run a command that depends on a tool you have not checked exists.
 
-Everything here was measured on hyperframes 0.9.68, @hyperframes/engine 0.9.69, Chrome 158.0.8127.36, ffmpeg 7.1.5, 34 vCPU, 24 GB RAM.
+Everything here was verified against hyperframes 0.9.72, @hyperframes/engine 0.9.72, Chrome 158.0.8127.36 (`npx hyperframes browser ensure`), ffmpeg 7.1.5, Node 26, 34 vCPU, 24 GB RAM.
 
 ## Contents
 1. Environment check
@@ -154,22 +154,17 @@ npx hyperframes check          # lint + runtime + layout + motion + contrast + c
 npx hyperframes render --output renders/<slug>.mp4 --workers=4
 ```
 
-**Measured render times** on a scene with 7 timed elements, 1080×1920:
+**Choosing `--workers`.** Start at `4`. Capture is already parallel inside the engine, so
+returns diminish fast: measured on a 60 s 1080×1920 film, 4→8 workers cut wall time by roughly
+a quarter (33 s → 24 s), while 1 worker took nearly twice as long as 4 (61 s vs 33 s) and 2.5×
+as long as 8. Past 8 the gain is noise. Every worker is a separate Chrome at roughly 256 MB, so
+size the count against free RAM before you size it against vCPU: 6 on a 24 GB box is safe, 8 is
+fine when little else is running. Expect ±20% run to run — repeat timings before you draw a
+conclusion from one, and never benchmark on a loaded box.
 
-| Duration | Frames | Workers | Wall |
-|---|---|---|---|
-| 3 s minimal | 90 | 3 | 8 s |
-| 9.6 s scaffold | 288 | 4 | **8 s** |
-| 60 s | 1800 | 1 | 25 s |
-| 60 s | 1800 | 6 | **19 s** |
-| 300 s landscape | 9000 | 6 | **69 s** |
-
-Worker scaling is flat (1→25 s, 6→19 s): capture is already parallel inside the engine, so
-raising `--workers` past 6 mostly adds memory. Each worker is a separate Chrome (~256 MB).
-
-Quality presets on a 60 s film, 4 workers: `draft` 16.9 s / 721 KB, `looks` 18.4 s / 784 KB,
-`delivery` 18.6 s / 801 KB. `looks` is the default; use `delivery` only for the final file
-when quality matters more than a few seconds.
+Quality presets: `looks` is the default and is right for everything except the final file, where
+`delivery` costs a few extra seconds for a slightly larger output. `draft` exists for checking
+timing, not for delivery.
 
 ## 3. Measuring and analysing the voiceover
 

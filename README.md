@@ -270,7 +270,7 @@ tiga-mitos-otak/
 |---|---|
 | `ffmpeg` + `ffprobe` | rendering, measuring, verification |
 | `node` >= 22 | runs the HyperFrames CLI |
-| `hyperframes` 0.9.68 | the renderer and the QC gate |
+| `hyperframes` 0.9.72 | the renderer and the QC gate |
 | HyperFrames browser (685 MB) | `npx hyperframes browser ensure`, once |
 | `whisper.cpp` **or** `faster-whisper` | word-level timing (optional, degrades to estimate) |
 | `GEMINI_API_KEY` | optional TTS when you have no recording (Interactions endpoint) |
