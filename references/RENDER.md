@@ -425,9 +425,9 @@ so a headline across the top half can use the whole width.
 
 The bottom margin is the largest because that is where every vertical platform stacks its UI —
 caption, username, audio ticker, progress bar, OS gesture bar — while the top carries only a
-header. The numbers match the two sources in this repo that describe organic short-form:
-`_vendor/explainer-video-skills/skills/wrapped-video/references/scene-grammar.md` (top 12%,
-bottom 18%, sides 5%) and `_vendor/motioner/references/typography.md` (top 250 px, bottom
+header. The numbers match two other installed skills that describe organic short-form:
+`~/.agents/skills/iart-wrapped-video/references/scene-grammar.md` (top 12%,
+bottom 18%, sides 5%) and `~/.agents/skills/motioner/references/typography.md` (top 250 px, bottom
 400 px on a 1080-wide frame). Top is 13% to clear the taller of the two.
 
 Anything that must be read sits above **28% from the bottom** (y ≤ 1382), clear of a two-line
