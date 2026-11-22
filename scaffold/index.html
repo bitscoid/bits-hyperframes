@@ -100,6 +100,10 @@
          corner of every beat, which is what a template looks like.
          Set left/top per film (and vary it between beats). */
       .meta {
+        /* Absolute, or every inline left/top on a text element is ignored and the
+           text layer stacks in the top-left corner. Measured defect: 45/45 texts
+           at x≈2 px, y≈0 in a finished MP4. */
+        position: absolute;
         font-family: var(--font-meta);
         font-weight: var(--font-meta-weight);
         font-size: 28px; letter-spacing: 6px; text-transform: uppercase;
@@ -142,6 +146,7 @@
 
       .title {
         /* placeholder position: overwrite per film */
+        position: absolute;
         left: 56px; top: 470px;
         font-family: var(--font-display);
         font-weight: var(--font-display-weight);
