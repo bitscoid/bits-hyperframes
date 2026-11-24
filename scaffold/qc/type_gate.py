@@ -11,8 +11,8 @@ required choice with a failing gate does.
 Fails on:
   1. window.BITS_TYPE_PRESET in index.html is unset, or is not a known key
   2. the chosen preset puts one family in more than one role
-  3. a family the preset names is neither declared by an @font-face in
-     index.html nor bundled by HyperFrames — it would render in a fallback and
+  3. a family the preset names is not declared by an @font-face in
+     index.html with its file in assets/fonts/ — it would render in a fallback and
      nothing else would catch it
   4. the table in js/type-presets.mjs and the copy in js/apply-type-preset.js
      disagree, about a key, a family or a weight. The copy is what the page
@@ -34,29 +34,6 @@ INDEX = ROOT / "index.html"
 PRESETS_MJS = ROOT / "js" / "type-presets.mjs"
 PRESETS_JS = ROOT / "js" / "apply-type-preset.js"
 RECORD = ROOT / "work" / "type-used.json"
-
-# Families HyperFrames ships by name, so they need no @font-face of their own.
-# Everything else the presets name must be declared in index.html.
-BUNDLED = {
-    "Inter",
-    "Montserrat",
-    "Outfit",
-    "Nunito",
-    "Oswald",
-    "League Gothic",
-    "Archivo Black",
-    "Space Mono",
-    "IBM Plex Mono",
-    "JetBrains Mono",
-    "EB Garamond",
-    "Playfair Display",
-    "Source Code Pro",
-    "Noto Sans JP",
-    "Roboto",
-    "Open Sans",
-    "Lato",
-    "Poppins",
-}
 
 findings = []
 warnings = []
@@ -154,11 +131,11 @@ elif chosen == "custom":
             findings.append("window.BITS_TYPE_CUSTOM reuses a family across roles.")
         else:
             for role, fam in fams.items():
-                if fam not in BUNDLED and not re.search(
+                if not re.search(
                     r"@font-face\s*\{[^}]*font-family:\s*'" + re.escape(fam) + "'", index
                 ):
                     findings.append(
-                        f'custom {role} family "{fam}" is neither bundled nor declared by an\n'
+                        f'custom {role} family "{fam}" is not declared by an\n'
                         f"    @font-face in index.html — it would render in the fallback."
                     )
 elif chosen not in table:
@@ -177,9 +154,9 @@ if chosen in table:
             f'preset "{chosen}" reuses a family across roles ({", ".join(fams)}).'
         )
     for fam in fams:
-        if fam and fam not in BUNDLED and fam not in declared:
+        if fam and fam not in declared:
             findings.append(
-                f'preset "{chosen}" names "{fam}", which is neither bundled nor declared by an\n'
+                f'preset "{chosen}" names "{fam}", which is not declared by an\n'
                 f"    @font-face in index.html — it would render in the fallback. Declare it, or\n"
                 f"    correct the name to what the font itself declares."
             )

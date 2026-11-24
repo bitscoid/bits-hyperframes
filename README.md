@@ -242,7 +242,7 @@ tiga-mitos-otak/
 │   ├── music.wav           optional, 48 kHz
 │   ├── image-01.png        first supporting image
 │   ├── reference.mp4       style reference video
-│   └── fonts/              only for a family that is not bundled
+│   └── fonts/              every family the film uses, downloaded from Google Fonts
 ├── renders/
 │   ├── tiga-mitos-otak.mp4 deliverable; name equals folder name
 │   ├── tiga-mitos-otak.srt subtitle track, optional

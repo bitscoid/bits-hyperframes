@@ -76,7 +76,7 @@ A rule that passes (1) but fails (2) is a restriction, not a standard. Rejected 
 
 Every number left in these documents **protects** something (legibility, safe area, contrast, encoder behaviour). If you find a number that dictates taste, treat it as a bug in this document: skip it and say so.
 
-Never treat anything in `references/` as a template. What transfers is the measuring method, not the measured result. The font catalogue is a starting point, not a menu — if the topic needs typography that isn't installed, download it.
+Never treat anything in `references/` as a template. What transfers is the measuring method, not the measured result. No font ships with this skill and nothing is read from the machine: every family is downloaded from Google Fonts into `assets/fonts/` and declared with `@font-face` (`references/RENDER.md` §1).
 
 One exception that is commonly misread: on-screen text **does not** need a supporting word in the voiceover. Silent emphasis is legitimate — just record the reason in the timeline.
 
@@ -119,7 +119,7 @@ tiga-mitos-otak/
 │   ├── music.wav           optional, 48 kHz
 │   ├── image-01.png        first supporting image
 │   ├── reference.mp4       style reference video
-│   └── fonts/              only for a family that is not bundled
+│   └── fonts/              every family the film uses, downloaded from Google Fonts
 ├── renders/
 │   ├── tiga-mitos-otak.mp4 deliverable; name equals folder name
 │   ├── tiga-mitos-otak.srt subtitle track, optional
@@ -188,7 +188,7 @@ Engine files a HyperFrames project needs — `hyperframes.json`, `.hyperframes/`
 
 | Script | Does |
 |---|---|
-| `scripts/make_music.py` | synthesises the background bed — four-chord progression, root bass, plucked arpeggio, noise breath at each chord change. Exact duration, 48 kHz stereo WAV, peak −6 dBFS. Flags: `--duration --out --tempo --mood`; see `references/RENDER.md` §8 |
+| `scripts/make_music.py` | synthesises the background bed — duration, 48 kHz stereo WAV, peak −6 dBFS. **Required: `--brief`**, free text describing the topic's musical mood; the brief decides scale, chord progression, timbre family, bass motion, arpeggio density, texture and tempo, and seeds the randomness. Optional `--tempo`, `--seed`. See `references/RENDER.md` §8 |
 
 ## Workflow
 
@@ -274,13 +274,13 @@ tipografinya.
 | Media | Lands at | Status | If the user has none |
 |---|---|---|---|
 | Voiceover recording | `audio/voiceover.wav` | Strongly recommended; it is the timing source | See "Without a voiceover" below |
-| Background music | `audio/music.wav` | Optional | `scripts/make_music.py` generates a chord-progression bed, or render silent |
+| Background music | `audio/music.wav` | Optional | `scripts/make_music.py --brief "<topic mood>"` generates a bespoke bed (write a fresh brief per film), or render silent |
 | Style reference video | `assets/reference.mp4` | Optional | Search Pinterest for `motion graphics` + topic keywords (stage 3); if nothing fits, design the style yourself |
 | Supporting images (1st, 2nd, …) | `assets/image-01.png`, `assets/image-02.png`, … | Optional | You find suitable images online, draw them in code, or both |
 | Screen orientation | — | Asked with the script in stage 1; repeat here only if still open | Default landscape 1920×1080 → cap 300 s; portrait 1080×1920 → cap 60 s |
 | Captions / subtitles | burned-in or `renders/<slug>.srt` | Optional, asked once | No captions; offer the `.srt` in the delivery message |
 
-The table above is for your own reference. What reaches the user is the Indonesian block. Typography is **not** asked about — that is your call in stage 4, and if the right font is not installed you download it.
+The table above is for your own reference. What reaches the user is the Indonesian block. Typography is **not** asked about — that is your call in stage 4; the family is downloaded from Google Fonts into `assets/fonts/` (never taken from the machine).
 
 ### Stage 3 — Confirm readiness
 
@@ -381,7 +381,7 @@ Pilihannya:
    sendiri: latar [warna], aksen [warna], tipografi [jenis], gerak [sifat].
    Kalau Anda punya contoh tampilan yang lebih Anda suka, kirim saja.
    ```
-5. **Pick a type preset from the topic, then set it — the build fails until you do.** `js/type-presets.mjs` holds eight registers (`playful-rounded`, `playful-bold`, `poster-display`, `editorial`, `archival`, `kinetic-impact`, `technical`, `handwritten`), each a display + meta + accent family with the reason it suits a topic. Read the reference's type register, choose the preset that fits the topic, and set `window.BITS_TYPE_PRESET` in the `<head>` of `index.html`, above the script that reads it. Every family name in the table is the name the font declares (`Baloo 2`, not `Baloo2`); a file or module name loads the font and then renders the fallback in silence. `python3 qc/type_gate.py` fails on an empty key, on one family carrying all three roles, on a family that is neither bundled nor declared by an `@font-face`, and on the two preset tables drifting apart; a repeat in the same folder is only a note, because a rerun is the normal case. Do not keep a default: the default is what made every film look the same. If no preset fits, add one plus its family files, its `@font-face` rule and its entry in `js/apply-type-preset.js`. Read the reference's type register first, then match a family to the topic's character. State the choice and reasoning in one sentence. If that font is not in the catalogue and not installed, search the internet for one that fits, download it, and verify it before writing scene code — recipe in `references/RENDER.md` §1. Never start building with a font that merely exists and then bend the design toward it; that order produces generic work.
+5. **Pick a type preset from the topic, then set it — the build fails until you do.** `js/type-presets.mjs` holds eight registers (`playful-rounded`, `playful-bold`, `poster-display`, `editorial`, `archival`, `kinetic-impact`, `technical`, `handwritten`), each a display + meta + accent family with the reason it suits a topic. Read the reference's type register, choose the preset that fits the topic, and set `window.BITS_TYPE_PRESET` in the `<head>` of `index.html`, above the script that reads it. Every family name in the table is the name the font declares (`Baloo 2`, not `Baloo2`); a file or module name loads the font and then renders the fallback in silence. `python3 qc/type_gate.py` fails on an empty key, on one family carrying all three roles, on a family that is not declared by an `@font-face` with its file in `assets/fonts/`, and on the two preset tables drifting apart; a repeat in the same folder is only a note, because a rerun is the normal case. Do not keep a default: the default is what made every film look the same. If no preset fits, add one plus its family files, its `@font-face` rule and its entry in `js/apply-type-preset.js`. Read the reference's type register first, then match a family to the topic's character. State the choice and reasoning in one sentence. Download that family from Google Fonts into `assets/fonts/`, declare it with `@font-face`, and verify it before writing scene code — recipe in `references/RENDER.md` §1. Never read a font from the machine. Never start building with a font that merely exists and then bend the design toward it; that order produces generic work.
 
    ```
    Tipografi: [nama keluarga huruf] untuk [peran], karena [alasan singkat

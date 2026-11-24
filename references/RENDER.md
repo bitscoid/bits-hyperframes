@@ -54,7 +54,7 @@ refusal, or `[image omitted: ...]`.
 - **Fail** → delegate that one call to the `vision` subagent.
 - **Both fail** → say so and ask the user for a text description.
 
-### Fonts
+### Fonts — always downloaded into the project
 
 **A film has three type roles, and they should not all share a family.** The pairing is
 the design; one family for all three is what makes a video read as a template.
@@ -65,62 +65,18 @@ the design; one family for all three is what makes a video read as a template.
 | **meta** | labels, indices, chips, footnotes | mono, or small-caps serif | `--font-meta` |
 | **accent** | an annotation, a scribble | handwriting, sparingly, never body | `--font-accent` |
 
-**The bundled families cover only the first two registers.** HyperFrames bundles 18
-families **by name**: Inter, Montserrat, Outfit, Nunito, Oswald, League Gothic, Archivo
-Black, Space Mono, IBM Plex Mono, JetBrains Mono, EB Garamond, Playfair Display, Source Code
-Pro, Noto Sans JP, Roboto, Open Sans, Lato, Poppins.
+**No font ships with this skill and no font is read from the machine.** There is no
+bundled family list and no font cache: a film that resolves a font from the system
+renders differently on another machine, after a rebuild, or in the cloud — and the
+failure is silent, because the browser substitutes a fallback and reports nothing.
 
-None of them is handwriting, doodle or rounded *display*. That is not a gap in the tool — it
-means the playful registers must be shipped in `assets/fonts/` and declared. The scaffold
-does this already, with five families ready to swap in:
+**One route only: download from Google Fonts into `assets/fonts/`, then declare it.**
 
-| Family | Register | Use for |
-|---|---|---|
-| `Fredoka` | rounded, friendly, geometric | display for a light or playful topic |
-| `Baloo 2` | rounded, heavier, warmer | display when Fredoka is too soft |
-| `Shrikhand` | heavy display, high personality | a title, once per film |
-| `Caveat` | handwriting, natural | the accent role — annotations |
-| `Patrick Hand` | handwriting, blockier | the accent role when Caveat is too cursive |
-
-Delete the ones a film does not use; each is 100–680 KB and they are shipped per project.
-
-**The register is a required choice, not a default.** `js/type-presets.mjs` holds eight, each a
-display + meta + accent triple with the reason it suits a topic:
-
-| Preset | Display | Meta | Accent | When |
-|---|---|---|---|---|
-| `playful-rounded` | Fredoka | JetBrains Mono | Caveat | food, habits, kids, everyday science |
-| `playful-bold` | Baloo 2 | Nunito | Patrick Hand | fitness, productivity, how-to |
-| `poster-display` | Shrikhand | Poppins | Caveat | culture, music, opinion |
-| `editorial` | Fraunces | JetBrains Mono | Caveat | essay, history, analysis |
-| `archival` | Libre Caslon | Space Mono | Kalam | financial, legal, historical |
-| `kinetic-impact` | Anton | JetBrains Mono | Caveat | statistics, records, hooks |
-| `technical` | Space Grotesk | IBM Plex Mono | Kalam | systems, code, data |
-| `handwritten` | Caveat | Nunito | Indie Flower | first-person, reflective |
-
-Set `window.BITS_TYPE_PRESET` in the `<head>` of `index.html`, above the script tag that reads
-it. `python3 qc/type_gate.py` fails on an empty key, on one family carrying all three roles, on a
-family that is neither bundled nor declared by an `@font-face`, and on the table disagreeing with
-the copy in `js/apply-type-preset.js`; repeating the previous run's preset is only a note.
-
-Two measured traps, both silent before they were fixed:
-
-- **Order.** The apply script was loaded before the inline assignment, read `undefined`, took the
-  "fall back to the CSS defaults" path and returned. Every film rendered the same pairing while
-  the gate — which reads the text of the file, not the live DOM — reported OK. The key is now
-  assigned in its own `<script>` above it, and the script throws instead of falling back.
-- **The name.** A family is matched by the name the font declares, not the file or module name:
-  `Baloo 2`, not `Baloo2`; `Space Grotesk`, not `SpaceGrotesk`. Declaring the file under the
-  wrong name loads it and then renders the fallback with no error anywhere.
-
-`js/apply-type-preset.js` reads the key and writes `--font-{display,meta,accent}` and their
-weights. It declares no `@font-face`: injecting the rules from script fails
-`font_family_without_font_face`, because `check` lints the static file, not the DOM.
-
-The bundle has Latin at a few weights per family. Other weights and scripts are fetched from
-Google Fonts and cached in `~/.cache/hyperframes/fonts`.
-
-Any other family needs an explicit face, or lint fails `font_family_without_font_face`:
+```bash
+mkdir -p assets/fonts
+curl -sL -o assets/fonts/Fraunces.ttf \
+  "https://github.com/google/fonts/raw/main/ofl/fraunces/Fraunces%5BSOFT%2CWONK%2Copsz%2Cwght%5D.ttf"
+```
 
 ```html
 <style>
@@ -131,9 +87,23 @@ Any other family needs an explicit face, or lint fails `font_family_without_font
 </style>
 ```
 
-Measured: a local `Fraunces.ttf` loaded correctly (`document.fonts.check` true; 286 px wide
-for "KATA" against 295 px for the DejaVu fallback). A `local()`-only face works on this
-machine and fails in the cloud, where lint warns `font_face_local_only`.
+Rules that the gates enforce:
+
+- **Every family in the chosen preset needs its own `@font-face` and its file in
+  `assets/fonts/`.** `qc/type_gate.py` fails otherwise; `npx hyperframes check` fails with
+  `font_family_without_font_face`.
+- **Name the family exactly as the font declares it** — `Baloo 2`, not `Baloo2`. A wrong
+  name loads the file and renders the fallback in silence.
+- **Never use `src: local(...)`.** It works on the machine that has the font and fails
+  everywhere else; lint reports `font_face_local_only`.
+- **Verify the download before building.** Under 10 KB on disk is an HTML error page, not a
+  font. `document.fonts.check('700 96px Fraunces')` must return true in the render browser.
+
+**Pick the family from the topic, not from what is easy to fetch.** Read the reference's
+type register first, match a family to the topic's character, and state the choice and
+reason in one sentence. If the family you want is not on Google Fonts, choose another that
+is. Do not start building with a font that merely exists and then bend the design toward
+it; that order produces generic work.
 
 ## 2. The render contract
 
@@ -254,11 +224,30 @@ If the computed total exceeds the cap — **60 s portrait, 300 s landscape** —
 
 ### When there is no voiceover
 
-1. **Gemini TTS** (needs `GEMINI_API_KEY`). Models `gemini-3.8-flash-tts` and
+1. **Gemini TTS** (needs a Gemini key). Models `gemini-3.8-flash-tts` and
    `gemini-3.8-flash-lite-tts` (separate quota). Endpoint `POST /v1beta/interactions`,
    style in `input[].content[].annotations[].style`, audio in `steps[].content[].data`.
    Build the payload with `json.dumps`, and strip `[Hook]` / `[Inti N]` / `[Penutup]`
    labels — the model reads text verbatim.
+
+   **Keys rotate automatically — never hardcode one key.** Quota is per key *per
+   model* (free tier ≈10 TTS requests/day). The shared helper returns every key in
+   priority order — `$GEMINI_API_KEY`, then each `/root/.hermes/keys/*.key`, then
+   `GEMINI_API_KEY` in `/root/.hermes/.env` — and the same set serves bits-affiliate,
+   bits-motion, bits-hyperframes and bits-bang-motion:
+
+   ```bash
+   python3 /root/.hermes/keys/gemini_key.py     # how many keys are ready
+   ```
+
+   ```python
+   import sys; sys.path.insert(0, "/root/.hermes/keys")
+   from gemini_key import keys
+   ```
+
+   On `429` / `RESOURCE_EXHAUSTED` / `API_KEY_INVALID`, mark that key spent and try
+   the next one before giving up. Add capacity by dropping `/root/.hermes/keys/<name>.key`
+   (chmod 600). Never print a key value into logs — `key#N` is enough.
 2. **No key / failure:** never fabricate a voice. Ask the user to record it.
 
 ## 4. Analysing a reference video
@@ -639,8 +628,15 @@ Only when the user supplies none. Use the bundled generator — a one-chord pad 
 every film from these skills sound the same:
 
 ```bash
-python3 <skill>/scripts/make_music.py --duration 52 --out assets/music.wav --tempo 84 --mood warm
+python3 <skill>/scripts/make_music.py --duration 52 --out assets/music.wav \
+    --brief "pasar subuh, hangat, akustik, tenang, sedikit melankolis"
 ```
+
+**Write the brief from the topic — never leave it empty and never reuse the previous film's brief.** The brief is the creative act: it decides key, chord quality, timbre, bass motion, arpeggio density, texture depth, and tempo. Two films that get the same brief get the same music, so a copied brief is the one way to make this generator sound monotonous again.
+
+`--brief` is free text. Words are scored, not matched to a fixed list: `tenang` / `sedih` / `tegang` / `ceria` / `megah` / `akustik` / `urban` / `malam` all pull the parameters, and unrecognised words still change the seed. Use `--tempo` to force BPM when the topic has a natural pace, and `--seed` to force a different take from the same brief.
+
+When the topic deserves music this synthetic bed cannot give — a hummed melody, a specific regional instrument, a real song — supply `audio/music.wav` yourself (royalty-free, licence recorded in the delivery message). The project always prefers a user file over the generator.
 
 `<skill>` is this skill's own directory; the generator ships with the skill, so the
 project folder stays free of build tooling. Run it from the project folder.
@@ -648,17 +644,21 @@ project folder stays free of build tooling. Run it from the project folder.
 It writes 48 kHz stereo 16-bit WAV at exactly `--duration` (never loop a short bed), peak
 −6 dBFS, 1.2 s fade-in, and a fade-out that lands on a floor rather than absolute zero.
 
-What it plays: a four-chord progression (two bars per chord), each chord carrying a detuned
-two-voice pad, a root bass on beats 1 and 3, a plucked arpeggio on eighths alternating pan,
-and a soft noise breath at every chord change.
+What it plays is derived from the brief: a four-chord functional progression in a scale
+chosen from the brief's mood (minor / dorian / major / lydian / phrygian / mixolydian),
+with a timbre family per topic (chalk / wood / glass / metal — each a different harmonic
+stack and attack), bass motion (root / octave / walking), arpeggio density, and a texture
+layer. The seed comes from the brief text, so the same brief always renders identically —
+a re-render never shifts music away from the already-synced picture.
 
 | Flag | Values | Choose by |
 |---|---|---|
-| `--mood` | `warm` (Am–F–C–G) · `dark` (Dm–B♭–F–C) · `bright` (C–Em–Am–F) | the topic's tone; `dark` for history/analysis, `bright` for light explainers |
-| `--tempo` | 60–100, default 84 | the film's cut rhythm; faster film, faster bed. Keep it under the cut rate so it never fights the narration |
+| `--brief` | free text (required) | the topic's mood and material — this is the creative decision, write it fresh per film |
+| `--tempo` | 60–120 | the film's cut rhythm; omit to let the brief decide. Keep it under the cut rate so it never fights the narration |
+| `--seed` | integer | force a different take from the same brief; omit to derive from the brief text |
 
-Add it with an `<audio>` tag and `data-volume` around 0.22. Re-run the same command with a
-different `--mood`/`--tempo` per film rather than reusing one bed across a series.
+Add it with an `<audio>` tag and `data-volume` around 0.22. Each film gets its own brief —
+reusing one bed, or one brief, across a series is what made every film sound alike.
 
 Tell the user plainly that this is synthesised music — a progression and a pulse generated in
 code, not a composed track — and suggest royalty-free music when they want more.
