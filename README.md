@@ -118,15 +118,15 @@ npx hyperframes browser ensure
 npx hyperframes check                              # must pass
 npx hyperframes render --output work/render-raw.mp4 --workers=4
 ffmpeg -y -i work/render-raw.mp4 -af "loudnorm=I=-16:TP=-1.5:LRA=11" \
-  -c:v copy -c:a aac -b:a 192k -ar 48000 renders/kenapa-kopi-bikin-ngantuk.mp4
+  -c:v copy -c:a aac -b:a 192k -ar 48000 output/kenapa-kopi-bikin-ngantuk.mp4
 python3 qc/safe_band.py                            # box constants match the sources
 python3 qc/make_sync_probe.py && python3 qc/sync_gate.py
 ```
 
 | Path | What it is |
 |---|---|
-| `renders/<slug>.mp4` | the video |
-| `renders/publish.txt` | caption, description, hashtags |
+| `output/<slug>.mp4` | the video |
+| `output/publish.txt` | caption, description, hashtags |
 | `index.html` | the whole visual design |
 | `audio/words.json` | the timing table, durable |
 | `qc/` | the sync gate |
@@ -243,7 +243,7 @@ tiga-mitos-otak/
 │   ├── image-01.png        first supporting image
 │   ├── reference.mp4       style reference video
 │   └── fonts/              every family the film uses, downloaded from Google Fonts
-├── renders/
+├── output/
 │   ├── tiga-mitos-otak.mp4 deliverable; name equals folder name
 │   ├── tiga-mitos-otak.srt subtitle track, optional
 │   └── publish.txt         caption, description, hashtags

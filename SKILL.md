@@ -42,6 +42,25 @@ Use the same rule for a supplied recording's metadata, a PDF, or a screenshot th
 
 Batch when there are several images in one stage — a single `vision` call naming all paths beats one call per file.
 
+## Project structure — one shape for every film
+
+Every project follows `/root/BITS/company/workflows/struktur-proyek-video.md`. In short:
+
+```
+<slug>/
+  index.html | render.py     the code
+  script.txt                 narration (never naskah.txt)
+  audio/                     voiceover.wav, music.wav, words.json
+  assets/                    fonts, images, material
+  output/                    the ONLY place for <slug>.mp4 and publish.txt
+  qc/                        checking scripts
+```
+
+Never create `renders/`, `out/`, or leave a video in the project root. The publish scheduler, the
+video counter and the completeness checker all read `output/`; anything elsewhere reads as a
+missing film. File names are lowercase English — `voiceover.wav`, never `Suara Voiceover.wav` —
+because a checker that looks for the standard name reports the film as broken.
+
 ## Fixed specifications
 
 | Parameter | Value |
@@ -120,7 +139,7 @@ tiga-mitos-otak/
 │   ├── image-01.png        first supporting image
 │   ├── reference.mp4       style reference video
 │   └── fonts/              every family the film uses, downloaded from Google Fonts
-├── renders/
+├── output/
 │   ├── tiga-mitos-otak.mp4 deliverable; name equals folder name
 │   ├── tiga-mitos-otak.srt subtitle track, optional
 │   └── publish.txt         caption + description + hashtags, copy-paste ready
@@ -142,11 +161,11 @@ Never create empty directories. No images means no `assets/`. No music means no 
 
 | Layer | Form | Example |
 |---|---|---|
-| Directories | one lowercase English word | `audio`, `assets`, `renders`, `work`, `compositions` |
+| Directories | one lowercase English word | `audio`, `assets`, `output`, `work`, `compositions` |
 | Data files | English kebab-case | `script.txt`, `voiceover.wav`, `words.json`, `publish.txt` |
 | Composition | kebab-case, one root | `index.html`, `compositions/scene-01.html` |
 | Project folder | topic slug, kebab-case | `tiga-mitos-otak` |
-| Deliverable | topic slug | `renders/tiga-mitos-otak.mp4` |
+| Deliverable | topic slug | `output/tiga-mitos-otak.mp4` |
 | File contents | Indonesian | script, comments, reports |
 
 One separator only: **the hyphen**. Spaces force shell quoting; underscores are reserved for Python modules.
@@ -174,7 +193,7 @@ If two candidates could both be the voiceover, or a file's role stays unclear af
 
 ### What this workflow does not create
 
-`project.json`, `timing.json`, `scenes.py`, `manifest.json`, `style.json`, `review/`, or a separate QC report. Creative decisions (font, voice, palette) are agreed with the user and live in `index.html`; check results are reported directly in the delivery message. Three exceptions, because they are data and not reports: `audio/words.json` (word timings), the optional `renders/<slug>.srt`, and `renders/publish.txt` (platform upload copy).
+`project.json`, `timing.json`, `scenes.py`, `manifest.json`, `style.json`, `review/`, or a separate QC report. Creative decisions (font, voice, palette) are agreed with the user and live in `index.html`; check results are reported directly in the delivery message. Three exceptions, because they are data and not reports: `audio/words.json` (word timings), the optional `output/<slug>.srt`, and `output/publish.txt` (platform upload copy).
 
 Engine files a HyperFrames project needs — `hyperframes.json`, `.hyperframes/` — are not project documents. The ban is on parallel sources of truth.
 
@@ -278,7 +297,7 @@ tipografinya.
 | Style reference video | `assets/reference.mp4` | Optional | Search Pinterest for `motion graphics` + topic keywords (stage 3); if nothing fits, design the style yourself |
 | Supporting images (1st, 2nd, …) | `assets/image-01.png`, `assets/image-02.png`, … | Optional | You find suitable images online, draw them in code, or both |
 | Screen orientation | — | Asked with the script in stage 1; repeat here only if still open | Default landscape 1920×1080 → cap 300 s; portrait 1080×1920 → cap 60 s |
-| Captions / subtitles | burned-in or `renders/<slug>.srt` | Optional, asked once | No captions; offer the `.srt` in the delivery message |
+| Captions / subtitles | burned-in or `output/<slug>.srt` | Optional, asked once | No captions; offer the `.srt` in the delivery message |
 
 The table above is for your own reference. What reaches the user is the Indonesian block. Typography is **not** asked about — that is your call in stage 4; the family is downloaded from Google Fonts into `assets/fonts/` (never taken from the machine).
 
@@ -439,7 +458,7 @@ Two checks protect the file itself and still have to be run by hand:
 # it already carries the safe band, the registered timeline and the gates
 cp -r <skill>/scaffold/. ./<slug>/
 cd <slug>
-mkdir -p assets audio renders work
+mkdir -p assets audio output work
 python3 qc/type_gate.py                    # fails until a preset is set
 # fill qc/sync-cases.json: one {text, t_vo} entry per keyword the film draws.
 # It ships empty and the sync gate REFUSES an empty probe — a gate that checks
@@ -447,7 +466,7 @@ python3 qc/type_gate.py                    # fails until a preset is set
 npx hyperframes check                      # must pass before the render
 npx hyperframes render --output work/render-raw.mp4 --workers=4
 ffmpeg -y -i work/render-raw.mp4 -af "loudnorm=I=-16:TP=-1.5:LRA=11" \
-  -c:v copy -c:a aac -b:a 192k -ar 48000 renders/<slug>.mp4
+  -c:v copy -c:a aac -b:a 192k -ar 48000 output/<slug>.mp4
 python3 qc/make_sync_probe.py && python3 qc/sync_gate.py
 ```
 
@@ -468,11 +487,11 @@ Inspect the exported MP4 from start to finish, not just the timeline editor:
 6. No black frames, **undocumented** frozen frames, glitches, or unintended audio defects.
 7. The MP4 plays. Actual duration equals the stage-4 total (never over the active cap), frame count = duration × 30, 30 fps, codec and resolution per spec, nothing after the final second, and the cap in use is stated (60 s portrait, 300 s landscape, or the number the user approved). All of it proven from the exported file's metadata.
 8. The measurements in `references/RENDER.md` §7 are run and reported: sync (no text appears before its word), geometry (safe area, cap height, collision, contrast), audio (no dead air inside the speech region; music present in the tail when music exists; mix I ∈ [−17, −14] LUFS, true peak ≤ −1 dBTP), and repetition pattern (compare `data-qc` boxes between beats; flag only, your call). Two of them are hard requirements — the exported frame count, and the finished loudness and tail floor. The rest are advisory: report the numbers and the decision you made from them.
-9. `renders/publish.txt` exists and every block in it is copy-paste ready — see *Publish copy* below. It is part of the deliverable, not an extra.
+9. `output/publish.txt` exists and every block in it is copy-paste ready — see *Publish copy* below. It is part of the deliverable, not an extra.
 
 Check the creative side with your eyes, not a script: open a contact sheet of the export sized from the actual duration — recipe and grid sizing in `references/RENDER.md` §7. If the main model cannot see it, hand the sheet to the `vision` subagent — one call, *Vision routing*. If every thumbnail looks like the same pattern with different words, composition variation is insufficient (`GUIDE.md` §6) — fix it before delivery.
 
-### Publish copy — `renders/publish.txt`
+### Publish copy — `output/publish.txt`
 
 Setiap delivery menulis file ini. Isinya dikunci oleh keputusan CEO BITS
 2026-11-21 — tidak ada aturan caption lain yang berlaku.

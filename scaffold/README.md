@@ -5,7 +5,7 @@ Copied into a new project folder, then edited in place.
 ```bash
 cp -r <skill>/scaffold/. ./tiga-mitos-otak/
 cd tiga-mitos-otak
-mkdir -p assets audio renders work   # only what you will fill
+mkdir -p assets audio output work   # only what you will fill
 npx hyperframes browser ensure   # once per machine, 685 MB
 python3 qc/type_gate.py          # fails until a type register is set
 npx hyperframes check            # must pass before any render
@@ -136,7 +136,7 @@ word and not before.
 
 ## Files the scaffold does not create
 
-`assets/`, `audio/`, `renders/`, `work/` are created when there is something to put in them.
+`assets/`, `audio/`, `output/`, `work/` are created when there is something to put in them.
 An empty `assets/` is a lie about the project's contents.
 
 The narration and the ASR output are yours to supply:

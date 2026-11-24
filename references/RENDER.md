@@ -114,14 +114,14 @@ machine cannot drop frames.
 index.html              the root composition and its data-* timing attributes
 compositions/           optional sub-compositions, one scene each
 assets/                 voiceover.wav, music.wav, images, fonts
-renders/                output of `hyperframes render`
+output/                output of `hyperframes render`
 .hyperframes/           artifacts: checks, snapshots, state
 ```
 
 ```bash
 npx hyperframes init <dir> --non-interactive --skip-skills --resolution portrait
 npx hyperframes check          # lint + runtime + layout + motion + contrast + craft + audio
-npx hyperframes render --output renders/<slug>.mp4 --workers=4
+npx hyperframes render --output output/<slug>.mp4 --workers=4
 ```
 
 **Choosing `--workers`.** Start at `4`. Capture is already parallel inside the engine, so
@@ -477,7 +477,7 @@ One ffmpeg pass fixes it:
 ffmpeg -y -i work/render-raw.mp4 \
   -af "loudnorm=I=-16:TP=-1.5:LRA=11" \
   -c:v copy -c:a aac -b:a 192k -ar 48000 \
-  renders/<slug>.mp4
+  output/<slug>.mp4
 ```
 
 `-c:v copy` never re-encodes the video. Measured: −34.5 → **−16.0 LUFS**.
@@ -493,7 +493,7 @@ Output is H.264 + AAC 48 kHz stereo. Transparent WebM and ProRes are available w
 
 ```bash
 ffprobe -v error -count_frames -select_streams v:0 \
-  -show_entries stream=nb_read_frames,width,height,r_frame_rate -of csv=p=0 renders/<slug>.mp4
+  -show_entries stream=nb_read_frames,width,height,r_frame_rate -of csv=p=0 output/<slug>.mp4
 ```
 
 Target: `FRAMES = DUR × 30`, 30 fps, H.264 + AAC, resolution as planned.
@@ -563,8 +563,8 @@ Two layers decide visibility, and the probe must apply **both**:
 ### Picture gates
 
 ```bash
-ffmpeg -i renders/<slug>.mp4 -vf "freezedetect=n=0:d=1.0" -an -f null - 2>&1 | grep freeze_
-ffmpeg -i renders/<slug>.mp4 -vf "blackdetect=d=0.5:pix_th=0.02" -an -f null - 2>&1 | grep black_
+ffmpeg -i output/<slug>.mp4 -vf "freezedetect=n=0:d=1.0" -an -f null - 2>&1 | grep freeze_
+ffmpeg -i output/<slug>.mp4 -vf "blackdetect=d=0.5:pix_th=0.02" -an -f null - 2>&1 | grep black_
 ```
 
 `freezedetect` needs `n=0`: the default `n=0.001` (about −60 dB) false-positives on flat
@@ -601,7 +601,7 @@ Or from the render:
 mkdir -p work/check
 CELLS=$(( (DUR + 2) / 3 ))
 GRID=$(python3 -c "import math; print(max(1, math.ceil(math.sqrt($CELLS))))")
-ffmpeg -i renders/<slug>.mp4 -vf "fps=1/3,scale=240:-1,tile=${GRID}x${GRID}" \
+ffmpeg -i output/<slug>.mp4 -vf "fps=1/3,scale=240:-1,tile=${GRID}x${GRID}" \
   -frames:v 1 work/check/sheet.png
 ```
 
@@ -721,9 +721,9 @@ verified and delivered.
 | `audio/words.json` | **the only non-reproducible derived file** — a fresh ASR pass returns ±0.1 s different timestamps and desyncs a re-render |
 | `assets/` | images, fonts, music |
 | `qc/sync-cases.json` | the texts the sync gate proves, with their word times |
-| `renders/<slug>.mp4` | the deliverable |
-| `renders/<slug>.srt` | subtitle track, when generated |
-| `renders/publish.txt` | caption, description, hashtags |
+| `output/<slug>.mp4` | the deliverable |
+| `output/<slug>.srt` | subtitle track, when generated |
+| `output/publish.txt` | caption, description, hashtags |
 
 Before deleting, confirm the required checks passed — duration, frame count, loudness, tail
 floor, black/freeze — measured from the exported MP4, never from the timeline.
