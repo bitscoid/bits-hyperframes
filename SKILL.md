@@ -452,6 +452,18 @@ Two checks protect the file itself and still have to be run by hand:
 - **frame count equals `DUR × 30`** in the exported file (`RENDER.md` §7) — a truncated render passes every visual check;
 - **final mix loudness and tail floor** (`RENDER.md` §6, §7) — HyperFrames mixes but does not master, so one `loudnorm` pass after export is mandatory.
 
+One more check closes a hole `hyperframes check` leaves open: its `layout` section samples only a
+handful of times (~9 on a 60 s film), so a real collision between two beats can sit between two
+samples and ship. Measured on a 47 s portrait film: `check` returned 0 errors while a 0.1 s sweep
+found three lasting overlaps — two display lines that wrapped onto a second line covering the beat
+below, and a 230 px number sitting on the line above it. The scaffold ships `qc/boxes.py` — run
+`python3 qc/boxes.py 0.1`: it sweeps the whole film and reports
+safe-box escapees and text-over-text, reading the **glyph** box (`Range.selectNodeContents`)
+rather than the element box, so it does not fire on a wide block whose ink sits comfortably
+inside. A finding lasting one sample is an entrance tween; only the lasting rows need a decision.
+A line whose `width` is smaller than its string wraps at any font size — size it to fit instead of
+moving its neighbour.
+
 ```bash
 # start from the skill's scaffold, not the empty `init` template:
 # it already carries the safe band, the registered timeline and the gates
