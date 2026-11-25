@@ -571,6 +571,48 @@ ffmpeg -i output/<slug>.mp4 -vf "blackdetect=d=0.5:pix_th=0.02" -an -f null - 2>
 graphics, and `n` is a linear 0–1 ratio, not a dB value. `blackdetect` needs `pix_th=0.02`:
 a `0x0B0B0F` background reads as black from `0.05` up.
 
+### Text inside a frame — centring gate
+
+A chip, badge, tag, button, sticker or card holds its text **centred both ways**:
+horizontally *and* vertically against its frame. Horizontal-only centring leaves
+the text floating high or low and reads as misplacement, however good the copy is.
+
+- **Browser (DOM/HTML):** let the frame centre its own content —
+  `display:flex; align-items:center; justify-content:center` — instead of nudging
+  the text with `transform`, `padding-top` or a hand-tuned offset. Then prove it:
+  `Range.getClientRects()` for the line count (one rect = one line) plus
+  `getBoundingClientRect()` of frame and text; centre-to-centre gap ≤ 2 px, and
+  top/bottom gaps equal within 3 px.
+- **PIL/skia (`render.py`):** never place text with a fixed nudge such as
+  `y + font.size * 0.34` — it is a guess that breaks at every new size or family.
+  Size the frame from the **glyph ink box** and centre the ink itself:
+
+  ```python
+  def ink_box(font, s, tracking=0.0):
+      """Real ink box of a string, relative to a text drawn at anchor 'lm'."""
+      x, xs, ys = 0.0, [], []
+      for ch in s:
+          b = font.getbbox(ch, anchor="lm")
+          xs += [x + b[0], x + b[2]]
+          ys += [b[1], b[3]]
+          x += font.getlength(ch) + tracking
+      return min(xs), min(ys), max(xs), max(ys)
+
+  ix0, iy0, ix1, iy1 = ink_box(font, label, tracking)
+  w = (ix1 - ix0) + 2 * pad_x          # frame from ink + symmetric padding
+  h = (iy1 - iy0) + 2 * pad_y
+  d.text((cx - (ix0 + ix1) / 2, cy - (iy0 + iy1) / 2),
+         label, font=font, anchor="lm")   # centre of ink on centre of frame
+  ```
+
+- **Prove it from pixels, not from the code that drew it.** Record each frame box
+  as it is drawn, then measure the rendered frame: ink bbox against frame bbox,
+  centre-to-centre ≤ 2 px and left/right, top/bottom gaps equal within 4 px.
+  Drop the rounded corners and a 4 px border before measuring, otherwise the
+  outline itself is counted as ink and every chip looks off-centre. Vision is not
+  a substitute — it calls a 12 px misalignment "centred".
+- A finding here is a defect, not taste: fix the geometry and re-render.
+
 ### Repetition gate
 
 `check` does not compare beats to each other. Do it yourself, from the same DOM the sync gate
@@ -674,11 +716,42 @@ HyperFrames also ships `npx hyperframes audio` (onsets, hits, loudness, silence 
 and `npx hyperframes beats` (writes `beats/<audio>.json`). Use them to check the mix; do not
 require scenes to start on beats.
 
+- **`assets/voiceover.wav` vs the BITS folder standard.** The skill's tree lists the narration under `assets/`, but
+  `/root/BITS/company/workflows/struktur-proyek-video.md` puts it in `audio/`. Declare `<audio src="…">` where the file
+  actually is: a mismatch is a lint **error** (`audio_src_not_found`, plus `http_error` and `clip_media_fit` in `runtime`)
+  and the render comes out silent. On a BITS project the source is `audio/voiceover.wav` and `audio/music.wav`.
+- **A music bed that ends exactly with the film doubles the fade.** `make_music.py` already fades its own tail to a floor;
+  a `data-fade-out` on the same element stacks on top of it and the last 0.5 s lands near −60 dB, which reads as the music
+  having died. Measured: a 60 s bed with `data-fade-out="1.2"` gave −63 dB in the final 0.5 s; the same bed generated at
+  **63 s** and cut to 60 by the element's `data-duration` with `data-fade-out="0.6"` gave −38.7 dB. **Generate the bed
+  2–4 s longer than the film.**
+- **Anchor graphics must enter at the clip's own start.** Reveals tied to spoken words land 0.5–1.0 s after the cut, so the
+  beat's shapes — the panel, the cabinet, the socket, the meter rails — have to be already on their way at `data-start`,
+  with a short entrance (0.26–0.3 s). Measured on a 60 s portrait film: seven beats read as "hampir kosong" on the contact
+  sheet until every anchor was moved to the cut and its tween shortened; the same frames then read as full.
+- **`data-qc` on the text, not on the clip.** `qc/boxes.py` measures `data-qc` leaf elements, and the scaffold's
+  `qc/repetition.py` only reads `.clip` elements that carry `data-qc`. On a project that tags the text elements instead,
+  the repetition gate reports "0 texts" — a gate that checks nothing. Point it at the text elements (class
+  `display`/`meta`/`hand` + `data-qc`) and give each one its owning clip, taken from the nearest preceding `data-start`.
+
 ## 9. Common traps
 
 - **`window.__hf` instead of `window.__timelines`.** Renders a **static video with no error**.
   Measured: the test element sat at x=319 px in every frame. Register a paused GSAP timeline
   under the composition id.
+- **Repeated `fromTo()` on the same target property has no stable baseline.** Lint says it
+  (`gsap_repeated_fromto_without_baseline`) and it is a real defect, not advice: the **last**
+  authored `from` values become the element's resting state for any seek before the first
+  tween, so a fade-in written as `fromTo(opacity 0→1)` followed later by `fromTo(opacity 1→0)`
+  is **visible from the start** and pops to 0 when its own tween begins. Measured on a 48 s
+  portrait film: a sentence meant to appear at its spoken word would have shipped early. Write
+  each initial state once with `gsap.set()` and animate with `tl.to()`, so a property has
+  exactly one writer per phase.
+- **A negative timeline position is clamped to 0.** `tl.to(el, {...}, -0.32)` does not start the
+  tween before the film's first frame — measured, the target was still `opacity: 0` at t=0 and
+  only reached 0.47 at t=0.05. To have content on frame 0 (the thumbnail every platform shows),
+  leave one element out of the entrance stagger: a resting-visible element with only a drift
+  tween is what makes `craft` stop reporting `first_frame_empty`.
 - **`<Series>`-style thinking.** HyperFrames is not Remotion: there is no frame function, and
   every visible property must be reachable from `seek(t)`. A property you set imperatively
   will not survive a seek.
@@ -703,6 +776,27 @@ require scenes to start on beats.
   works here and fails in the cloud (`font_face_local_only`).
 - **`timeline_track_too_dense`** is advice, not a defect: past ~10 timed elements, split into
   sub-compositions so the timeline stays readable.
+- **`faster_whisper` when `av` predates 13:** `decode_audio` calls
+  `av.open(..., metadata_errors="ignore")` and dies with `TypeError: open() got an unexpected
+  keyword argument`. Pass samples, not a path: decode the 16 kHz mono WAV with `wave` + `numpy`
+  and hand `model.transcribe()` a float32 array. No rebuild needed.
+- **Long-form whisper timestamps can come back out of order** even when the text is right:
+  measured on a 51 s Indonesian VO, the opening sentence was timestamped at 47 s. Run with
+  `vad_filter=True`, `condition_on_previous_text=False`, `temperature=0` — and prove the order
+  independently before trusting any time (transcribe fixed 5 s chunks and read the lines).
+- **Never align script sentences to ASR *segments*.** One segment spans several script
+  sentences and vice versa, so a per-segment match hands a sentence the wrong audio. Align the
+  two **word streams** with `difflib.SequenceMatcher`, then take each sentence's span from its
+  first and last word.
+- **`text-transform: uppercase` does not change `textContent`.** `qc/sync-cases.json` matches
+  `textContent`, so a label styled uppercase but written lowercase fails the gate as "missing or
+  late" for every case at once. Write the caps in the markup.
+- **`qc/make_sync_probe.py` needs `puppeteer-core`**, and searches only `./node_modules` and
+  `npm root -g`. When the engine runs from the npx cache, symlink it for the run and delete it
+  at cleanup:
+  `ln -sfn $(dirname $(find ~/.npm/_npx -maxdepth 6 -type d -name puppeteer-core | head -1)) node_modules`
+- **On an unattended host, `python3 -c`, heredocs and `rm -rf` are refused before they run.**
+  Write the script to a file and run it; clean up with `shutil.rmtree` or `rmdir`.
 
 ## 10. Cleanup after delivery
 
